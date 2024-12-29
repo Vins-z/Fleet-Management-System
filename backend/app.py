@@ -6,7 +6,17 @@ from models import Vehicle
 import database
 from werkzeug.exceptions import BadRequest
 from flask_cors import CORS  # Add this for Cross-Origin Resource Sharing (CORS)
+from dotenv import load_dotenv
+import os
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
+limiter = Limiter(get_remote_address, app=app)
+limiter.limit("100 per minute")(allocate_task_route)
+load_dotenv()
+
+app.config['MONGO_URI'] = os.getenv("MONGO_URI")
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 app = Flask(__name__)
 
 # Enable CORS for frontend-backend communication

@@ -81,18 +81,17 @@ Ensure the virtual environment is activated and install the dependencies from `r
 pip install -r requirements.txt
 ```
 
+#### For the website:
+
+```
+index.html
+```
+
 ### Step 3: Configure API Keys & Settings
 
 1. Configure any external APIs or services (e.g., GPS tracking, vehicle data).
 2. Add necessary API keys in the configuration file, typically located in `/config/settings.js` or `/config/config.py` depending on your backend stack.
 
-```javascript
-// settings.js (example for Node.js)
-module.exports = {
-    gpsApiKey: "YOUR_API_KEY",
-    fuelTrackerApiKey: "YOUR_API_KEY",
-};
-```
 
 ### Step 4: Run the Application
 
@@ -110,8 +109,6 @@ npm start
 python app.py
 ```
 
-
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -120,7 +117,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ```
 FleetManagement/
-│
 ├── backend/
 │   ├── app.py
 │   ├── database.py
@@ -131,40 +127,31 @@ FleetManagement/
 │   │   ├── __init__.py
 │   │   ├── task_allocation.py
 │   │   └── route_optimizer.py
-│   └── tests/
-│       ├── test_task_allocation.py
-│       └── test_route_optimizer.py
-│
+│   └── requirements.txt
 ├── frontend/
 │   ├── public/
-│   │   ├── index.html
-│   │   └── styles.css
-│   └── src/
-│       ├── App.js
-│       ├── components/
-│       │   ├── Dashboard.js
-│       │   ├── FleetMap.js
-│       │   └── TaskManager.js
-│       └── services/
-│           ├── api.js
-│
-├── README.md
-├── LICENSE
-└── requirements.txt
+│   ├── src/
+│   │   ├── components/
+│   │   ├── App.js
+│   │   └── index.js
+│   ├── package.json
+│   ├── package-lock.json
+│   └── .env
+├── docker-compose.yml
+└── .github/
+    └── workflows/
+        └── deploy.yml
 ```
 
 ## Technical Components
 
 | Component          | Technology                      |
 |--------------------|---------------------------------|
-| Backend API        | Python (Flask/Django)           |
-| Frontend           | React.js, Vue.js, or Angular     |
-| Database           | MongoDB, PostgreSQL             |
-| Vehicle Tracking   | GPS APIs, Real-time Location API|
-| Authentication     | JWT, OAuth                      |
-| Fuel Tracking      | External Fuel APIs, custom logic|
-| Notifications      | SMTP/Email API, Push Notifications|
-| Deployment         | Docker, Heroku, AWS             |
+| Backend API        | Python (Flask)                  |
+| Frontend           | React.js, HTML, CSS             |
+| Database           | MongoDB                         |
+| Vehicle Tracking   | GPS APIs, Real-time Location    |
+| Fuel Tracking      | custom logic                    |
+| Deployment         | Docker, Github Actions          |
 
 ---
-Thank you for choosing our Fleet Management System. We hope it helps you streamline your fleet operations and achieve greater efficiency!
