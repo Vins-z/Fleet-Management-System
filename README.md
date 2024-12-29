@@ -111,16 +111,6 @@ python app.py
 ```
 
 
-## Screenshots
-
-### Dashboard View
-![Dashboard View](path/to/dashboard-screenshot.png)
-
-### Vehicle Tracking
-![Vehicle Tracking](path/to/vehicle-tracking-screenshot.png)
-
-### Maintenance Alerts
-![Maintenance Alerts](path/to/maintenance-alerts-screenshot.png)
 
 ## License
 
@@ -129,32 +119,38 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Directory Structure
 
 ```
-/fleet-management
+FleetManagement/
 │
-├── /src
-│   ├── /assets                # Images, icons, etc.
-│   ├── /components            # Reusable UI components
-│   ├── /services              # API calls, integrations, utilities
-│   ├── /views                 # Main pages or UI views (Dashboard, Vehicle Tracking)
-│   └── /styles                # CSS/SCSS files or styled components
+├── backend/
+│   ├── app.py
+│   ├── database.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── vehicle.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── task_allocation.py
+│   │   └── route_optimizer.py
+│   └── tests/
+│       ├── test_task_allocation.py
+│       └── test_route_optimizer.py
 │
-├── /tests                     # Unit tests for your code
+├── frontend/
+│   ├── public/
+│   │   ├── index.html
+│   │   └── styles.css
+│   └── src/
+│       ├── App.js
+│       ├── components/
+│       │   ├── Dashboard.js
+│       │   ├── FleetMap.js
+│       │   └── TaskManager.js
+│       └── services/
+│           ├── api.js
 │
-├── /config                    # Configuration files (API keys, settings)
-│
-├── /docs                      # Documentation for your code (optional)
-│
-├── /public                    # Public assets (HTML files, favicon, etc.)
-│
-├── /scripts                   # Helper scripts (e.g., deployment, build scripts)
-│
-├── /node_modules              # Node.js dependencies (if using JavaScript)
-│   └── ...
-│
-├── README.md                  # Project overview and setup instructions
-├── LICENSE                    # License for the project
-├── package.json               # Project metadata and dependencies (for JavaScript)
-└── requirements.txt           # Project dependencies (for Python)
+├── README.md
+├── LICENSE
+└── requirements.txt
 ```
 
 ## Technical Components
