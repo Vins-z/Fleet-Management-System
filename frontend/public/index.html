@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="description" content="Fleet Management System - Optimize your fleet with real-time tracking, maintenance alerts, fuel monitoring, and driver management." />
+    <meta name="keywords" content="Fleet Management, Vehicle Tracking, Fuel Monitoring, Maintenance Alerts, Driver Management" />
+    <meta name="author" content="Your Company Name" />
+    <title>Fleet Management System</title>
+
+    <!-- Google Tag Manager -->
+    <script>
+      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start': new Date().getTime(), event:'gtm.js'}); 
+      var f=d.getElementsByTagName(s)[0], j=d.createElement(s), dl=l!='dataLayer'?'&l='+l:''; 
+      j.async=true; j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl; f.parentNode.insertBefore(j,f); 
+      })(window,document,'script','dataLayer','GTM-XXXXXXX');
+    </script>
+    <!-- End Google Tag Manager -->
+
+    <!-- Link to stylesheets -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+
+    <!-- Include additional scripts for real-time features -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      // Real-time dashboard update using setInterval (could be replaced with WebSockets for live data)
+      setInterval(function() {
+        // Simulate real-time updates for features
+        document.getElementById("active-vehicles").textContent = Math.floor(Math.random() * 30);
+        document.getElementById("vehicles-under-maintenance").textContent = Math.floor(Math.random() * 5);
+        document.getElementById("fuel-consumption").textContent = Math.floor(Math.random() * 1500) + " Liters";
+        document.getElementById("fuel-efficiency").textContent = Math.floor(Math.random() * 20) + " km/l";
+        
+        // Example: Simulate maintenance alert changes
+        let maintenanceVehicles = [
+          "Vehicle 12: Oil Change - Due Tomorrow",
+          "Vehicle 19: Brake Check - Due Next Week",
+          "Vehicle 5: Tire Check - Due Today"
+        ];
+        const randomMaintenance = maintenanceVehicles[Math.floor(Math.random() * maintenanceVehicles.length)];
+        document.getElementById("maintenance-alerts").textContent = randomMaintenance;
+      }, 5000);
+    </script>
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+      <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+      height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <header>
+      <div class="container">
+        <nav>
+          <a href="#hero" class="logo">Fleet Management</a>
+          <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#dashboard">Dashboard</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="container">
+          <h1>Effortless Fleet Management</h1>
+          <p>Track, manage, and optimize your fleet with ease using our comprehensive Fleet Management System.</p>
+          <a href="#features" class="cta-button">Learn More</a>
+        </div>
+      </section>
+
+      <!-- Features Section -->
+      <section id="features" class="features">
+        <div class="container">
+          <h2>Features</h2>
+          <div class="feature-cards">
+            <div class="card">
+              <h3>🔍 Real-Time Vehicle Tracking</h3>
+              <p>Track vehicle usage, mileage, and real-time location effortlessly.</p>
+              <p>Active Vehicles: <strong id="active-vehicles">25</strong></p>
+              <p>Vehicles Under Maintenance: <strong id="vehicles-under-maintenance">3</strong></p>
+            </div>
+            <div class="card">
+              <h3>⚙️ Maintenance Alerts</h3>
+              <p>Stay on top of scheduled maintenance with timely reminders.</p>
+              <p>Maintenance Alert: <strong id="maintenance-alerts">Vehicle 12: Oil Change - Due Tomorrow</strong></p>
+            </div>
+            <div class="card">
+              <h3>⛽ Fuel Monitoring</h3>
+              <p>Monitor fuel efficiency and identify cost-saving opportunities.</p>
+              <p>Total Fuel Consumption This Month: <strong id="fuel-consumption">1,200 Liters</strong></p>
+              <p>Fuel Efficiency: <strong id="fuel-efficiency">15 km/l</strong></p>
+            </div>
+            <div class="card">
+              <h3>📊 Fleet Dashboard</h3>
+              <p>Gain a complete overview of your fleet’s performance at a glance.</p>
+            </div>
+            <div class="card">
+              <h3>👥 Driver Management</h3>
+              <p>Manage driver assignments, performance, and task tracking.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dashboard Section -->
+      <section id="dashboard" class="dashboard">
+        <div class="container">
+          <h2>Fleet Dashboard</h2>
+          <p>View your fleet's current status, vehicle health, and more in real-time.</p>
+          <div class="dashboard-container">
+            <div class="dashboard-item">
+              <h3>Vehicle Tracking</h3>
+              <p>Active Vehicles: <strong id="active-vehicles">25</strong></p>
+              <p>Vehicles Under Maintenance: <strong id="vehicles-under-maintenance">3</strong></p>
+            </div>
+            <div class="dashboard-item">
+              <h3>Fuel Usage</h3>
+              <p>Total Consumption This Month: <strong id="fuel-consumption">1,200 Liters</strong></p>
+              <p>Efficiency: <strong id="fuel-efficiency">15 km/l</strong></p>
+            </div>
+            <div class="dashboard-item">
+              <h3>Maintenance Schedule</h3>
+              <ul>
+                <li>Vehicle 12: <strong>Oil Change - Due Tomorrow</strong></li>
+                <li>Vehicle 19: <strong>Brake Check - Due Next Week</strong></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>&copy; 2024 Fleet Management System. All rights reserved.</p>
+        <p><a href="#privacy-policy">Privacy Policy</a> | <a href="#terms">Terms of Service</a></p>
+      </div>
+    </footer>
+
+    <!-- Include scripts -->
+    <script src="bundle.js" defer></script>
+  </body>
+</html>
