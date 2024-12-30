@@ -1,0 +1,48 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: Set up Docker
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    # Step 3: Build and push Docker images (requires DockerHub credentials)
+    - name: Log in to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push backend image
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/fleet-backend ./backend
+        docker push ${{ secrets.DOCKER_USERNAME }}/fleet-backend
+
+    - name: Build and push frontend image
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/fleet-frontend ./frontend
+        docker push ${{ secrets.DOCKER_USERNAME }}/fleet-frontend
+
+    # Step 4: Deploy to server using SSH
+    - name: Deploy to Production Server
+      uses: appleboy/ssh-action@v0.1.8
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/fleet-backend
+          docker pull ${{ secrets.DOCKER_USERNAME }}/fleet-frontend
+          docker-compose -f /path/to/remote/docker-compose.yml up -d

@@ -2,10 +2,15 @@ import pymongo
 from pymongo import MongoClient
 from pymongo.errors import ConnectionError, OperationFailure, NetworkTimeout, ConfigurationError, DuplicateKeyError
 import logging
+from pymongo import ASCENDING
 
+def create_indexes():
+    collection = database.get_collection('vehicles')
+    collection.create_index([("battery_level", ASCENDING)])
+    collection.create_index([("location", ASCENDING)])
 # Database connection configurations
 DATABASE_URI = "mongodb+srv://kumarvinayak829:qJGqZkVDPcRAYhHs@vehicledata.gskjh.mongodb.net/?retryWrites=true&w=majority&appName=VehicleData"
-DATABASE_NAME = "fleet_management"
+DATABASE_NAME = "VehicleData"
 
 # Initialize the logger with timestamp formatting
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')

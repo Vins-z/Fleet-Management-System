@@ -28,18 +28,29 @@ const mockFleetData = [
     status: "Idle",
   },
 ];
+// const [fleetData, setFleetData] = useState([]);
+useEffect(() => {
+  const fetchVehicles = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/vehicles");
+      setFleetData(response.data.vehicles);
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+    }
+  };
+  fetchVehicles();
+}, []);
 
 // Custom Marker Icon
 const vehicleIcon = L.icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/854/854878.png", // Replace with a custom icon URL
-  iconSize: [30, 30],
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/854/854878.png",
   iconAnchor: [15, 30],
   popupAnchor: [0, -30],
 });
 
 const FleetMap = () => {
   const [fleetData, setFleetData] = useState([]);
-  const [center, setCenter] = useState([28.6139, 77.209]); // Initial center of the map
+  const [center, setCenter] = useState([28.6139, 77.209]); // Default center
 
   useEffect(() => {
     // Simulate API call
