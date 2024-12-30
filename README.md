@@ -2,7 +2,7 @@
 
 ## Project Description
 
-Welcome to the Fleet Management System, a user-friendly and scalable MicroSaaS solution designed specifically for small and medium-sized fleet operators. Our platform helps fleet managers optimize vehicle usage, keep track of maintenance schedules, monitor fuel consumption, and manage logistics effortlessly. A User can oversee and manage all aspects of your fleet operations from a single interface. This is built for one-person startups or small businesses aiming to improve and effectively manage their fleet without the need for a complex infrastructure.
+Welcome to the Fleet Management System, a scalable MicroSaaS solution designed specifically for small and medium-sized fleet operators. This platform helps fleet managers optimize vehicle usage, keep track of maintenance schedules, monitor fuel consumption, and manage logistics effortlessly. A User can oversee and manage all aspects of your fleet operations from a single interface. This is built for startups or small businesses aiming to improve and effectively manage their fleet without the need for a complex infrastructure.
 
 ## The Problem
 
