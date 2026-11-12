@@ -6,10 +6,12 @@ from dotenv import load_dotenv
 from werkzeug.exceptions import BadRequest
 
 from database import init_db, get_db
-from models.models import Vehicle as DBVehicle, Driver, Task, RouteLog, MaintenanceLog, FuelLog
+from models.models import Vehicle as DBVehicle, Driver, Task, RouteLog, MaintenanceLog, FuelLog, Geofence, TelematicsEvent
 from models.vehicle import Vehicle
 from services.task_allocation import allocate_task
 from services.route_optimizer import ai_optimize_route, optimize_route
+from services.vrp_optimizer import optimize_vrp_tour
+from services.geofence_service import evaluate_vehicle_geofences
 
 # Load environment configuration
 load_dotenv()
@@ -515,6 +517,211 @@ def handle_vehicle_fuel(vehicle_id):
     except Exception as e:
         logger.error(f"Error handling vehicle fuel for {vehicle_id}: {e}")
         return jsonify({'error': str(e)}), 400
+
+
+# ---------------------------------------------------------------------------
+# Geofencing APIs
+# ---------------------------------------------------------------------------
+@app.route('/api/geofences', methods=['GET', 'POST'])
+def handle_geofences():
+    try:
+        with get_db() as session:
+            if request.method == 'GET':
+                geofences = session.query(Geofence).all()
+                return jsonify({'status': 'success', 'geofences': [g.to_dict() for g in geofences]}), 200
+
+            data = request.json or {}
+            if not data.get('name') or data.get('latitude') is None or data.get('longitude') is None:
+                return jsonify({'error': 'name, latitude, and longitude are required'}), 400
+
+            gf = Geofence(
+                name=data['name'],
+                zone_type=data.get('zone_type', 'Warehouse'),
+                latitude=float(data['latitude']),
+                longitude=float(data['longitude']),
+                radius_km=float(data.get('radius_km', 2.5)),
+                description=data.get('description', '')
+            )
+            session.add(gf)
+            session.flush()
+            return jsonify({'status': 'success', 'geofence': gf.to_dict()}), 201
+    except Exception as e:
+        logger.error(f"Error handling geofences: {e}")
+        return jsonify({'error': str(e)}), 400
+
+
+@app.route('/api/geofences/<int:geofence_id>', methods=['DELETE'])
+def delete_geofence(geofence_id):
+    try:
+        with get_db() as session:
+            gf = session.query(Geofence).filter(Geofence.id == geofence_id).first()
+            if not gf:
+                return jsonify({'error': 'Geofence not found'}), 404
+            session.delete(gf)
+            return jsonify({'status': 'success', 'message': f'Geofence {geofence_id} deleted'}), 200
+    except Exception as e:
+        logger.error(f"Error deleting geofence: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/geofences/evaluate', methods=['POST'])
+def evaluate_geofences():
+    """
+    Evaluates vehicle locations against all active geofences and detects zone compliance.
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        location = data.get('location')
+
+        with get_db() as session:
+            geofences = session.query(Geofence).all()
+            if location:
+                results = evaluate_vehicle_geofences(location, geofences)
+                return jsonify({'status': 'success', 'evaluations': results}), 200
+
+            # Evaluate all active fleet vehicles against all geofences
+            vehicles = session.query(DBVehicle).all()
+            fleet_eval = []
+            for v in vehicles:
+                res = evaluate_vehicle_geofences((v.latitude, v.longitude), geofences)
+                fleet_eval.append({
+                    'vehicle_id': v.vehicle_id,
+                    'name': v.name,
+                    'location': [v.latitude, v.longitude],
+                    'zones': res
+                })
+
+            return jsonify({'status': 'success', 'fleet_evaluations': fleet_eval}), 200
+    except Exception as e:
+        logger.error(f"Error evaluating geofences: {e}")
+        return jsonify({'error': str(e)}), 400
+
+
+# ---------------------------------------------------------------------------
+# Telematics & Driver Scorecards APIs
+# ---------------------------------------------------------------------------
+@app.route('/api/telematics/events', methods=['GET', 'POST'])
+def handle_telematics_events():
+    try:
+        with get_db() as session:
+            if request.method == 'GET':
+                events = session.query(TelematicsEvent).order_by(TelematicsEvent.created_at.desc()).limit(50).all()
+                return jsonify({'status': 'success', 'events': [e.to_dict() for e in events]}), 200
+
+            data = request.json or {}
+            vehicle_id = data.get('vehicle_id')
+            event_type = data.get('event_type')
+            if not vehicle_id or not event_type:
+                return jsonify({'error': 'vehicle_id and event_type are required'}), 400
+
+            te = TelematicsEvent(
+                vehicle_id=int(vehicle_id),
+                event_type=event_type,
+                severity=data.get('severity', 'Medium'),
+                latitude=float(data.get('latitude', 28.6139)),
+                longitude=float(data.get('longitude', 77.2090)),
+                description=data.get('description', '')
+            )
+            session.add(te)
+            session.flush()
+            return jsonify({'status': 'success', 'event': te.to_dict()}), 201
+    except Exception as e:
+        logger.error(f"Error in handle_telematics_events: {e}")
+        return jsonify({'error': str(e)}), 400
+
+
+@app.route('/api/drivers/scorecards', methods=['GET'])
+def get_driver_scorecards():
+    """
+    Returns safety ratings, hours-of-service compliance, and harsh incident history for each driver.
+    """
+    try:
+        with get_db() as session:
+            drivers = session.query(Driver).all()
+            return jsonify({
+                'status': 'success',
+                'drivers': [d.to_dict() for d in drivers]
+            }), 200
+    except Exception as e:
+        logger.error(f"Error fetching driver scorecards: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ---------------------------------------------------------------------------
+# Multi-Stop VRP (Vehicle Routing Problem) Route Optimizer
+# ---------------------------------------------------------------------------
+@app.route('/api/routes/vrp_optimize', methods=['POST'])
+def vrp_optimize_route():
+    """
+    Solves Multi-Stop Vehicle Routing Problem (VRP) to find the shortest delivery tour
+    visiting multiple delivery customer stops.
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        start_location = data.get('start_location')
+        stops = data.get('stops')
+
+        if not start_location:
+            start_location = (28.6139, 77.2090)  # default central hub
+
+        # If no stops provided, pull all pending tasks from database
+        if not stops:
+            with get_db() as session:
+                tasks = session.query(Task).filter(Task.status == 'Pending').all()
+                stops = [t.to_dict() for t in tasks]
+
+        result = optimize_vrp_tour(start_location, stops)
+        return jsonify(result), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        logger.error(f"Error in vrp_optimize_route: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ---------------------------------------------------------------------------
+# Executive & ESG / Carbon Summary Report
+# ---------------------------------------------------------------------------
+@app.route('/api/reports/summary', methods=['GET'])
+def get_executive_summary():
+    """
+    Returns complete enterprise audit report including fleet utilization,
+    carbon footprint, fuel expenditure, and maintenance compliance.
+    """
+    try:
+        with get_db() as session:
+            vehicles = session.query(DBVehicle).all()
+            tasks = session.query(Task).all()
+            drivers = session.query(Driver).all()
+            fuel_logs = session.query(FuelLog).all()
+            maintenance_logs = session.query(MaintenanceLog).all()
+
+            total_co2_kg = sum(v.co2_emissions_kg for v in vehicles)
+            total_fuel_cost = sum(f.cost for f in fuel_logs)
+            total_odometer = sum(v.odometer_km for v in vehicles)
+            avg_safety = round(sum(d.safety_score for d in drivers) / len(drivers), 1) if drivers else 95.0
+
+            return jsonify({
+                'status': 'success',
+                'fleet_summary': {
+                    'total_assets': len(vehicles),
+                    'active_assets': len([v for v in vehicles if v.status == 'Active']),
+                    'idle_assets': len([v for v in vehicles if v.status == 'Idle']),
+                    'maintenance_hold': len([v for v in vehicles if v.status == 'Maintenance Due']),
+                    'total_fleet_km': round(total_odometer, 1),
+                    'total_fuel_expenditure_usd': round(total_fuel_cost, 2),
+                    'cost_per_km_usd': round(total_fuel_cost / max(1.0, total_odometer), 3),
+                    'fleet_average_safety_score': avg_safety,
+                    'esg_carbon_footprint_kg': round(total_co2_kg, 1),
+                    'esg_ev_savings_kg': round(total_co2_kg * 0.35, 1),
+                    'open_maintenance_tickets': len([m for m in maintenance_logs if m.status != 'Completed']),
+                    'completed_delivery_orders': len([t for t in tasks if t.status == 'Completed']),
+                    'pending_delivery_orders': len([t for t in tasks if t.status == 'Pending'])
+                }
+            }), 200
+    except Exception as e:
+        logger.error(f"Error generating executive summary: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':

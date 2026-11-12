@@ -101,3 +101,63 @@ def test_optimize_route_api(client):
     assert 'optimized_route' in data
     assert 'route' in data['optimized_route']
 
+def test_geofences_api(client):
+    # Get geofences
+    res = client.get('/api/geofences')
+    assert res.status_code == 200
+    data = json.loads(res.data)
+    assert 'geofences' in data
+
+    # Create geofence
+    payload = {
+        'name': 'Test Depot Zone',
+        'zone_type': 'Depot',
+        'latitude': 28.65,
+        'longitude': 77.15,
+        'radius_km': 1.5
+    }
+    post_res = client.post('/api/geofences', json=payload)
+    assert post_res.status_code == 201
+    gf_id = json.loads(post_res.data)['geofence']['id']
+
+    # Evaluate
+    eval_res = client.post('/api/geofences/evaluate', json={'location': [28.651, 77.151]})
+    assert eval_res.status_code == 200
+
+    # Delete
+    del_res = client.delete(f'/api/geofences/{gf_id}')
+    assert del_res.status_code == 200
+
+def test_telematics_events_api(client):
+    res = client.get('/api/telematics/events')
+    assert res.status_code == 200
+    data = json.loads(res.data)
+    assert 'events' in data
+
+def test_driver_scorecards_api(client):
+    res = client.get('/api/drivers/scorecards')
+    assert res.status_code == 200
+    data = json.loads(res.data)
+    assert 'drivers' in data
+
+def test_vrp_multi_stop_api(client):
+    payload = {
+        'start_location': [28.6139, 77.2090],
+        'stops': [
+            {'title': 'Stop Alpha', 'latitude': 28.7, 'longitude': 77.1, 'priority': 1},
+            {'title': 'Stop Beta', 'latitude': 28.5, 'longitude': 77.3, 'priority': 2}
+        ]
+    }
+    res = client.post('/api/routes/vrp_optimize', json=payload)
+    assert res.status_code == 200
+    data = json.loads(res.data)
+    assert data['status'] == 'success'
+    assert data['total_stops'] == 2
+
+def test_executive_summary_report_api(client):
+    res = client.get('/api/reports/summary')
+    assert res.status_code == 200
+    data = json.loads(res.data)
+    assert 'fleet_summary' in data
+    assert 'esg_carbon_footprint_kg' in data['fleet_summary']
+

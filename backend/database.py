@@ -191,4 +191,16 @@ def seed_demo_data():
         f3 = FuelLog(vehicle_id=v3.id, fuel_added_liters=50.0, cost=85.00, odometer_km=61200.0, efficiency_kml=8.8)
         session.add_all([f1, f2, f3])
 
+        # Geofences (Industry standard zones: Central Hub, East Logistics Park, West Depot)
+        g1 = Geofence(name="Central Distribution Hub", zone_type="Warehouse", latitude=28.6139, longitude=77.2090, radius_km=3.5, description="Primary freight sorting terminal.")
+        g2 = Geofence(name="North Cargo Terminal", zone_type="Depot", latitude=28.7041, longitude=77.1025, radius_km=2.8, description="Heavy vehicle fleet depot & maintenance bay.")
+        g3 = Geofence(name="East Commercial District", zone_type="Customer Zone", latitude=28.5355, longitude=77.3910, radius_km=4.2, description="High-density customer retail delivery cluster.")
+        session.add_all([g1, g2, g3])
+
+        # Telematics Safety & Behavior Events
+        te1 = TelematicsEvent(vehicle_id=v1.id, event_type="Harsh Braking", severity="Low", latitude=28.685, longitude=77.115, description="Deceleration exceeded -0.45g threshold at intersection.")
+        te2 = TelematicsEvent(vehicle_id=v4.id, event_type="Low Battery Warning", severity="Critical", latitude=28.6139, longitude=77.209, description="Battery dropped below critical threshold (18%).")
+        te3 = TelematicsEvent(vehicle_id=v2.id, event_type="Geofence Entry", severity="Low", latitude=28.5355, longitude=77.391, description="Entered East Commercial District zone.")
+        session.add_all([te1, te2, te3])
+
         logger.info("Demo data seeding completed successfully.")

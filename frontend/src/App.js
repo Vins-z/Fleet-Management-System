@@ -5,6 +5,8 @@ import FleetMap from './components/FleetMap';
 import TaskManager from './components/TaskManager';
 import RoutePlanner from './components/RoutePlanner';
 import MaintenanceFuel from './components/MaintenanceFuel';
+import DriverSafety from './components/DriverSafety';
+import GeofenceManager from './components/GeofenceManager';
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -34,7 +36,7 @@ const App = () => {
           <div className="logo-area" onClick={() => setActiveTab('dashboard')}>
             <div className="apple-badge-icon">🚛</div>
             <div className="logo-text">
-              FleetOS <span className="version-tag">Pro</span>
+              FleetOS <span className="version-tag">Enterprise</span>
             </div>
           </div>
 
@@ -70,7 +72,23 @@ const App = () => {
                   className={activeTab === 'routes' ? 'active' : ''}
                   onClick={() => setActiveTab('routes')}
                 >
-                  Route Studio
+                  Route Studio (VRP)
+                </button>
+              </li>
+              <li>
+                <button
+                  className={activeTab === 'safety' ? 'active' : ''}
+                  onClick={() => setActiveTab('safety')}
+                >
+                  Driver Safety
+                </button>
+              </li>
+              <li>
+                <button
+                  className={activeTab === 'geofences' ? 'active' : ''}
+                  onClick={() => setActiveTab('geofences')}
+                >
+                  Geofences
                 </button>
               </li>
               <li>
@@ -78,7 +96,7 @@ const App = () => {
                   className={activeTab === 'maintenance' ? 'active' : ''}
                   onClick={() => setActiveTab('maintenance')}
                 >
-                  Health & Service
+                  Diagnostics
                 </button>
               </li>
             </ul>
@@ -119,6 +137,8 @@ const App = () => {
           )}
           {activeTab === 'tasks' && <TaskManager showToast={showToast} />}
           {activeTab === 'routes' && <RoutePlanner showToast={showToast} />}
+          {activeTab === 'safety' && <DriverSafety showToast={showToast} />}
+          {activeTab === 'geofences' && <GeofenceManager showToast={showToast} />}
           {activeTab === 'maintenance' && (
             <MaintenanceFuel showToast={showToast} />
           )}
@@ -128,9 +148,9 @@ const App = () => {
       {/* Apple Styled Footer */}
       <footer>
         <div className="container">
-          <p>© {new Date().getFullYear()} FleetOS MicroSaaS. Designed following Apple Human Interface Guidelines.</p>
+          <p>© {new Date().getFullYear()} FleetOS Enterprise. Industry-Standard Fleet Telematics & Vehicle Routing Architecture.</p>
           <p style={{ marginTop: '4px', fontSize: '0.8rem', color: '#86868b' }}>
-            PostgreSQL Relational Core · Flask Application Services · Dockerized Multi-Container Pipeline
+            PostgreSQL Relational Core · Multi-Stop VRP Optimizer · Geofence Telemetry · ESG Carbon Analytics
           </p>
         </div>
       </footer>

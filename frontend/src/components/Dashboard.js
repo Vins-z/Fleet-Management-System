@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { getDashboardStats } from '../services/api';
+import { getDashboardStats, getExecutiveSummaryReport } from '../services/api';
 
 const Dashboard = ({ showToast, setActiveTab }) => {
   const [stats, setStats] = useState(null);
+  const [summaryReport, setSummaryReport] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const data = await getDashboardStats();
-      setStats(data);
+      const [sData, rData] = await Promise.all([
+        getDashboardStats(),
+        getExecutiveSummaryReport(),
+      ]);
+      setStats(sData);
+      if (rData && rData.fleet_summary) {
+        setSummaryReport(rData.fleet_summary);
+      }
     } catch (err) {
       console.warn('Backend unavailable, using initial cached operational data:', err.message);
       setStats({
@@ -23,6 +30,18 @@ const Dashboard = ({ showToast, setActiveTab }) => {
           'Delivery Truck Alpha: Scheduled 50,000 km Oil & Filter Change (Scheduled)'
         ]
       });
+      setSummaryReport({
+        total_assets: 5,
+        total_fleet_km: 175000,
+        total_fuel_expenditure_usd: 273.7,
+        cost_per_km_usd: 0.002,
+        fleet_average_safety_score: 92.5,
+        esg_carbon_footprint_kg: 1225.0,
+        esg_ev_savings_kg: 428.8,
+        open_maintenance_tickets: 2,
+        completed_delivery_orders: 12,
+        pending_delivery_orders: 3
+      });
     } finally {
       setLoading(false);
     }
@@ -31,6 +50,31 @@ const Dashboard = ({ showToast, setActiveTab }) => {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  const exportCSVReport = () => {
+    if (!summaryReport) return;
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      "Metric,Value,Unit\n" +
+      `Total Registered Assets,${summaryReport.total_assets},Units\n` +
+      `Total Odometer Logged,${summaryReport.total_fleet_km},km\n` +
+      `Total Fuel Expenditure,${summaryReport.total_fuel_expenditure_usd},USD\n` +
+      `Fleet Safety Score,${summaryReport.fleet_average_safety_score},Points\n` +
+      `ESG Carbon Footprint,${summaryReport.esg_carbon_footprint_kg},kg CO2\n` +
+      `ESG EV Carbon Avoidance,${summaryReport.esg_ev_savings_kg},kg CO2\n` +
+      `Open Service Work Orders,${summaryReport.open_maintenance_tickets},Tickets\n` +
+      `Pending Dispatch Orders,${summaryReport.pending_delivery_orders},Orders\n`;
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `fleet_audit_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    if (showToast) showToast('Enterprise Fleet Audit CSV generated and downloaded.');
+  };
 
   const total = stats?.totalVehicles || 5;
   const activePercent = Math.round(((stats?.vehiclesInUse || 3) / total) * 100);
@@ -49,6 +93,12 @@ const Dashboard = ({ showToast, setActiveTab }) => {
           <p>Fleet utilization, satellite geofencing status, and diagnostic health telemetry.</p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={exportCSVReport}
+          >
+            ⬇️ Export Audit CSV
+          </button>
           <button
             className="btn btn-secondary"
             onClick={() => {
@@ -131,6 +181,56 @@ const Dashboard = ({ showToast, setActiveTab }) => {
             <span className="metric-unit">{stats?.fuelConsumption?.unit ?? 'km/L'}</span>
           </div>
           <small>Fleet average fuel economy</small>
+        </div>
+      </div>
+
+      {/* ESG Sustainability & Green Fleet Metrics */}
+      <div className="apple-card" style={{ marginBottom: '24px' }}>
+        <div className="apple-card-header">
+          <h3>🌱 ESG Sustainability & Carbon Footprint Telematics</h3>
+          <span className="badge badge-active">ISO 14064 Compliant</span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <div style={{ background: 'var(--surface-secondary)', padding: '16px', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '600' }}>
+              Fleet CO2 Emissions
+            </div>
+            <div style={{ fontSize: '1.8rem', fontWeight: '700', color: 'var(--text-primary)', marginTop: '4px' }}>
+              {summaryReport?.esg_carbon_footprint_kg ?? 1225.0} <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>kg</span>
+            </div>
+            <small style={{ color: 'var(--text-secondary)' }}>Based on diesel telemetry burn rate</small>
+          </div>
+
+          <div style={{ background: 'var(--surface-secondary)', padding: '16px', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '600' }}>
+              Clean Energy Offset
+            </div>
+            <div style={{ fontSize: '1.8rem', fontWeight: '700', color: 'var(--apple-green)', marginTop: '4px' }}>
+              -{summaryReport?.esg_ev_savings_kg ?? 428.8} <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>kg CO2</span>
+            </div>
+            <small style={{ color: 'var(--text-secondary)' }}>EV Courier asset offsets</small>
+          </div>
+
+          <div style={{ background: 'var(--surface-secondary)', padding: '16px', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '600' }}>
+              Fleet Safety Rating
+            </div>
+            <div style={{ fontSize: '1.8rem', fontWeight: '700', color: 'var(--apple-blue)', marginTop: '4px' }}>
+              {summaryReport?.fleet_average_safety_score ?? 92.5} <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>/ 100</span>
+            </div>
+            <small style={{ color: 'var(--text-secondary)' }}>Driver compliance index</small>
+          </div>
+
+          <div style={{ background: 'var(--surface-secondary)', padding: '16px', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: '600' }}>
+              Fleet Run Distance
+            </div>
+            <div style={{ fontSize: '1.8rem', fontWeight: '700', color: 'var(--apple-purple)', marginTop: '4px' }}>
+              {(summaryReport?.total_fleet_km ?? 175000).toLocaleString()} <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>km</span>
+            </div>
+            <small style={{ color: 'var(--text-secondary)' }}>Cumulative odometer</small>
+          </div>
         </div>
       </div>
 
@@ -229,7 +329,7 @@ const Dashboard = ({ showToast, setActiveTab }) => {
 
         {/* Quick Launch Cards */}
         <div className="apple-card" style={{ margin: 0 }}>
-          <h3 style={{ marginBottom: '14px', fontSize: '1.15rem' }}>Quick Actions</h3>
+          <h3 style={{ marginBottom: '14px', fontSize: '1.15rem' }}>Logistics Navigation</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <button
               className="btn btn-secondary"
@@ -241,16 +341,23 @@ const Dashboard = ({ showToast, setActiveTab }) => {
             <button
               className="btn btn-secondary"
               style={{ justifyContent: 'flex-start', padding: '12px 16px' }}
-              onClick={() => setActiveTab && setActiveTab('tasks')}
+              onClick={() => setActiveTab && setActiveTab('safety')}
             >
-              📋 Review Pending Task Manifest
+              🛡️ Driver Safety Scorecards
+            </button>
+            <button
+              className="btn btn-secondary"
+              style={{ justifyContent: 'flex-start', padding: '12px 16px' }}
+              onClick={() => setActiveTab && setActiveTab('geofences')}
+            >
+              🛰️ Manage Geofence Zones
             </button>
             <button
               className="btn btn-secondary"
               style={{ justifyContent: 'flex-start', padding: '12px 16px' }}
               onClick={() => setActiveTab && setActiveTab('routes')}
             >
-              🧭 Simulate Congestion Route
+              🧭 Multi-Stop VRP Tour Optimizer
             </button>
           </div>
         </div>

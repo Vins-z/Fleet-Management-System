@@ -198,6 +198,81 @@ export const createFuelLog = async (vehicleId, fuelData) => {
   }
 };
 
+// -------------------------------------------------------------
+// Industry Standard Geofencing & Telematics APIs
+// -------------------------------------------------------------
+export const getGeofences = async () => {
+  try {
+    const response = await apiClient.get('/api/geofences');
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const createGeofence = async (geofenceData) => {
+  try {
+    const response = await apiClient.post('/api/geofences', geofenceData);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const deleteGeofence = async (geofenceId) => {
+  try {
+    const response = await apiClient.delete(`/api/geofences/${geofenceId}`);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const evaluateGeofences = async (location) => {
+  try {
+    const response = await apiClient.post('/api/geofences/evaluate', { location });
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const getTelematicsEvents = async () => {
+  try {
+    const response = await apiClient.get('/api/telematics/events');
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const getDriverScorecards = async () => {
+  try {
+    const response = await apiClient.get('/api/drivers/scorecards');
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const optimizeVrpTour = async (payload) => {
+  try {
+    const response = await apiClient.post('/api/routes/vrp_optimize', payload);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const getExecutiveSummaryReport = async () => {
+  try {
+    const response = await apiClient.get('/api/reports/summary');
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
 const api = {
   getDashboardStats,
   getVehicles,
@@ -217,6 +292,14 @@ const api = {
   createMaintenanceLog,
   getFuelLogs,
   createFuelLog,
+  getGeofences,
+  createGeofence,
+  deleteGeofence,
+  evaluateGeofences,
+  getTelematicsEvents,
+  getDriverScorecards,
+  optimizeVrpTour,
+  getExecutiveSummaryReport,
 };
 
 export default api;
