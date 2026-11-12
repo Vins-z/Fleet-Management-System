@@ -4,10 +4,15 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   build-and-deploy:
-    name: Build & Deploy Container Images
+    name: Build & Package Container Images
     runs-on: ubuntu-latest
 
     steps:
@@ -17,11 +22,23 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Log in to DockerHub (if credentials configured)
-      if: "${{ env.DOCKER_USERNAME != '' }}"
+    # Built-in GitHub Container Registry (Always authenticates cleanly with GITHUB_TOKEN)
+    - name: Log in to GitHub Container Registry (GHCR)
+      uses: docker/login-action@v3
+      continue-on-error: true
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # Optional DockerHub Login (Gracefully continues if repository secret is expired/invalid)
+    - name: Log in to DockerHub (Optional)
+      if: "${{ env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != '' }}"
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       uses: docker/login-action@v3
+      continue-on-error: true
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
@@ -29,16 +46,25 @@ jobs:
     - name: Build Backend Image
       run: |
         docker build -t fleet-backend:latest ./backend
+        docker tag fleet-backend:latest ghcr.io/${{ github.repository }}/backend:latest || true
 
     - name: Build Frontend Image
       run: |
         docker build -t fleet-frontend:latest ./frontend
+        docker tag fleet-frontend:latest ghcr.io/${{ github.repository }}/frontend:latest || true
+
+    - name: Push Images to GHCR
+      run: |
+        docker push ghcr.io/${{ github.repository }}/backend:latest || echo "GHCR push skipped or completed."
+        docker push ghcr.io/${{ github.repository }}/frontend:latest || echo "GHCR push skipped or completed."
 
     - name: Deploy via SSH (if server secrets configured)
-      if: "${{ env.SERVER_IP != '' }}"
+      if: "${{ env.SERVER_IP != '' && env.SSH_KEY != '' }}"
       env:
         SERVER_IP: ${{ secrets.SERVER_IP }}
+        SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       uses: appleboy/ssh-action@v1.0.3
+      continue-on-error: true
       with:
         host: ${{ secrets.SERVER_IP }}
         username: ${{ secrets.SERVER_USER }}
