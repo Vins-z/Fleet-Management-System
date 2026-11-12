@@ -1,27 +1,29 @@
-# Use Node.js image for building the frontend
-FROM node:16 as build
+# Stage 1: Build the React application
+FROM node:18-alpine AS build
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and install dependencies
-COPY package.json .
-RUN npm install
+# Copy dependency manifests and install dependencies
+COPY package.json package-lock.json* ./
+RUN npm install --legacy-peer-deps
 
-# Copy the application code
+# Copy application sources
 COPY . .
 
-# Build the frontend application
+# Build production bundle
 RUN npm run build
 
-# Use Nginx to serve the built frontend
+# Stage 2: Serve built assets using Nginx
 FROM nginx:alpine
 
-# Copy built files from the previous stage
+# Copy built artifacts from builder stage
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Expose Nginx's default port
+# Copy custom Nginx configuration with reverse proxy for API
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose standard web port
 EXPOSE 80
 
-# Start Nginx
+# Start Nginx in foreground
 CMD ["nginx", "-g", "daemon off;"]

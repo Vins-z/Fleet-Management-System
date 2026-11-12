@@ -1,157 +1,218 @@
-# Fleet-Management-System - A MicroSaaS Project
+# Fleet Management System (FleetOS) — MicroSaaS Platform
 
-## Project Description
+An enterprise-ready, full-stack fleet management microSaaS application designed for logistics operators and delivery fleets. This platform automates vehicle task allocation, real-time route optimization with traffic congestion estimation, fleet GPS tracking, maintenance alerting, and fuel auditing.
 
-Welcome to the Fleet Management System, a scalable MicroSaaS solution designed specifically for small and medium-sized fleet operators. This platform helps fleet managers optimize vehicle usage, keep track of maintenance schedules, monitor fuel consumption, and manage logistics effortlessly. A User can oversee and manage all aspects of your fleet operations from a single interface. This is built for startups or small businesses aiming to improve and effectively manage their fleet without the need for a complex infrastructure.
+Containerized with Docker and automated with GitHub Actions CI/CD workflows, this project demonstrates end-to-end modern application development, containerization, and automated delivery.
 
-## The Problem
+---
 
-Fleet operators often struggle with some major problems like tracking vehicle maintenance, monitoring fuel usage, and ensuring overall fleet performance. This system automates these tasks to reduce operational overheads and ensures that your fleet runs smoothly at minimum cost.
+## Architecture Overview
 
-## Existing Real-World solutions deployed extensively
+```mermaid
+graph TD
+    subgraph Client ["Frontend Client (React 18 & Leaflet)"]
+        UI[App Header & Navigation]
+        DASH[Dashboard Analytics]
+        MAP[Fleet GPS Tracking]
+        TASKS[Task Allocation Manager]
+        ROUTES[AI Route Optimizer]
+        MAINT[Maintenance & Fuel Auditor]
+    end
 
-### Uber
-Uber the ride hailing platform utilizes a sophisticated fleet management system to track their vehicles, manage drivers, and ensure timely maintenance. This ensures that minimum wait times for cuatomers and also helps reduce the cost of supply chain to uber.
-### Lyft
-Lyft an american ride hailing and ride sharing platform employs a similar system to monitor vehicle health, track driver performance, and schedule maintenance, ensuring a smooth and reliable service for their users.
+    subgraph Service ["Backend Application Service (Flask WSGI / Gunicorn)"]
+        API[API Gateway & CORS]
+        ALLOC[Task Allocation Engine]
+        ROUTER[Route Optimization Service]
+        DB_LAYER[SQLAlchemy ORM Layer]
+    end
 
-## Key Features
+    subgraph Storage ["Relational Persistence (PostgreSQL 15)"]
+        DB[(PostgreSQL Database)]
+        V_TBL[Vehicles Table]
+        T_TBL[Tasks Table]
+        D_TBL[Drivers Table]
+        M_TBL[Maintenance Logs]
+        F_TBL[Fuel Audit Logs]
+    end
 
-- **Vehicle Tracking:** Easily track usage, mileage, and location of each and every vehicle in the fleet.
-- **Maintenance Alerts:** Set up reminders for scheduled maintenance, including oil changes, tire rotations, and more.
-- **Fuel Monitoring:** Track fuel consumption for each vehicle to detect inefficiencies and reduce costs.
-- **Fleet Dashboard:** A central dashboard providing an overview of your entire fleet’s status, including maintenance schedules and fuel efficiency.
-- **Driver Management:** Manage driver details and assignments, ensuring drivers are linked to specific vehicles and tasks.
+    subgraph Automation ["DevOps & CI/CD"]
+        DOCKER[Docker Compose Multi-Container]
+        GHA[GitHub Actions Workflows]
+    end
 
-## Features Overview
+    UI --> DASH & MAP & TASKS & ROUTES & MAINT
+    DASH & MAP & TASKS & ROUTES & MAINT -->|REST / JSON| API
+    API --> ALLOC & ROUTER & DB_LAYER
+    DB_LAYER --> DB
+    DB --> V_TBL & T_TBL & D_TBL & M_TBL & F_TBL
+```
 
-### 1. Vehicle Tracking
-- **Track vehicle usage, mileage, and real-time location.**
-- **Monitor the health and performance of each vehicle in your fleet.**
+---
 
-### 2. Maintenance Alerts
-- **Set recurring maintenance tasks and get automatic reminders.**
-- **Track the history of each vehicle’s maintenance and repairs.**
+## Core Capabilities
 
-### 3. Fuel Monitoring
-- **Monitor fuel efficiency per vehicle.**
-- **Track fuel consumption over time and generate reports to identify savings opportunities.**
+- **Automated Task Allocation Engine**: Dynamically scores and assigns pending logistics orders to vehicles based on geographic proximity, battery reserves, workload balance, and operational health thresholds (> 20% battery).
+- **Route Optimizer & Congestion Modeling**: Calculates great-circle Haversine distances, generates navigational waypoints, and adjusts trip duration based on real-time traffic congestion factors.
+- **Interactive Geospatial Map**: Leaflet-powered GPS telemetry map displaying live fleet asset locations, driver assignments, battery levels, and operating statuses.
+- **Structured Relational Storage**: Backed by **PostgreSQL** with SQLAlchemy ORM models ensuring ACID transactional safety for vehicles, drivers, tasks, routes, and maintenance records.
+- **Multi-Stage Containerization**: Production Dockerfiles for backend (Python slim + Gunicorn) and frontend (Node build + Nginx reverse proxy), orchestrated with Docker Compose.
+- **Automated CI/CD**: GitHub Actions workflows validating backend tests (`pytest`), frontend builds (`npm test` & `npm run build`), and Docker configurations on every push and PR.
 
-### 4. Fleet Dashboard
-- **Overview of all vehicles, their status, maintenance due dates, and more.**
-- **Easy-to-understand charts and graphs for fleet performance.**
+---
 
-### 5. Driver Management
-- **Assign vehicles to specific drivers.**
-- **Track driver behavior and performance.**
+## Technical Stack
+
+| Layer | Technologies |
+|---|---|
+| **Backend API** | Python 3.9+, Flask, Flask-CORS, SQLAlchemy, Gunicorn |
+| **Database** | PostgreSQL 15 (with automated SQLite fallback for local developer mode) |
+| **Routing & Logic** | Haversine algorithm, NumPy, Scikit-learn, Proximity Scoring |
+| **Frontend UI** | React 18, React-Leaflet, Leaflet GIS, Axios, Modern Responsive CSS |
+| **Containerization** | Docker, Docker Compose (Multi-stage builds, Healthchecks) |
+| **CI/CD Automation** | GitHub Actions (Automated unit tests, build validation, Docker deployment) |
+
+---
+
+## Directory Structure
+
+```text
+Fleet-Management-System/
+├── backend/
+│   ├── app.py                     # Central Flask API gateway
+│   ├── database.py                # PostgreSQL / SQLAlchemy connection & seed data
+│   ├── Dockerfile                 # Gunicorn + Python 3.9 slim container
+│   ├── models/
+│   │   ├── models.py              # Relational models: Vehicle, Driver, Task, Logs
+│   │   └── vehicle.py             # Vehicle operational model
+│   ├── services/
+│   │   ├── task_allocation.py     # Proximity & battery allocation algorithm
+│   │   └── route_optimizer.py     # Waypoint calculation & traffic estimation
+│   ├── tests/
+│   │   ├── test_api.py            # API endpoint integration tests
+│   │   ├── test_task_allocation.py# Task allocation unit tests
+│   │   └── test_route_optimizer.py# Route optimization unit tests
+│   ├── pytest.ini                 # Pytest configuration
+│   └── requirements.txt           # Pinned backend dependencies
+├── frontend/
+│   ├── Dockerfile                 # Multi-stage Node + Nginx container
+│   ├── nginx.conf                 # Nginx reverse proxy configuration
+│   ├── package.json               # Frontend dependencies and scripts
+│   ├── public/
+│   │   ├── index.html             # HTML5 entrypoint with Leaflet CSS
+│   │   └── styles.css
+│   └── src/
+│       ├── App.js                 # Primary application tab navigation
+│       ├── index.js               # React 18 DOM root
+│       ├── styles.css             # Responsive design system
+│       ├── components/
+│       │   ├── Dashboard.js       # Live KPI command center
+│       │   ├── FleetMap.js        # Leaflet interactive GPS tracking
+│       │   ├── TaskManager.js     # Task creation & auto-allocation UI
+│       │   ├── RoutePlanner.js    # AI-assisted route optimizer
+│       │   └── MaintenanceFuel.js # Service scheduler & fuel auditing
+│       └── services/
+│           └── api.js             # Unified Axios API client
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                 # Automated CI (pytest, npm test, docker validation)
+│       └── deploy.yml             # Container build & delivery pipeline
+├── docker-compose.yml             # PostgreSQL, Backend, & Frontend orchestration
+├── requirements.txt               # Root Python dependencies
+└── README.md                      # Documentation
+```
+
+---
 
 ## Getting Started
 
-### Prerequisites
+### Option 1: Running with Docker Compose (Recommended)
 
-Before you begin, ensure you have the following installed:
-- **Node.js and npm** (for frontend development)
-- **Python** (for backend development) or your preferred stack
-- A platform to run your application (localhost, cloud server, etc.)
-
-### Step 1: Clone the Repository
-
-Clone the repository to your local machine:
+Ensure Docker and Docker Compose are installed, then run:
 
 ```bash
-git clone https://github.com/Vins-z/Fleet-Management-System.git
-cd fleet-management
+docker compose up --build
 ```
 
-### Step 2: Install Dependencies
+- **Frontend Application**: [http://localhost:3000](http://localhost:3000)
+- **Backend API Gateway**: [http://localhost:5000/api/health](http://localhost:5000/api/health)
+- **PostgreSQL Database**: `localhost:5432` (`fleet_db`)
 
-#### For Frontend (if using JavaScript/Node.js):
+---
 
-In the project directory, install the necessary dependencies:
+### Option 2: Running Locally
 
-```bash
-npm install
-```
-
-#### For Backend (if using Python):
-
-Ensure the virtual environment is activated and install the dependencies from `requirements.txt`:
+#### 1. Backend Setup
 
 ```bash
+# Navigate to backend
+cd backend
+
+# Create virtual environment and activate
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Run backend (auto-initializes schema and demo data)
+python app.py
 ```
 
-#### For the website:
+The backend starts at `http://localhost:5000`.
 
-```
-index.html
-```
+#### 2. Frontend Setup
 
-### Step 3: Configure API Keys & Settings
-
-1. Configure any external APIs or services (e.g., GPS tracking, vehicle data).
-2. Add necessary API keys in the configuration file, typically located in `/config/settings.js` or `/config/config.py` depending on your backend stack.
-
-
-### Step 4: Run the Application
-
-To run the application locally:
-
-#### For Frontend (React, Vue.js, etc.):
+In a separate terminal:
 
 ```bash
+cd frontend
+npm install --legacy-peer-deps
 npm start
 ```
 
-#### For Backend (Python Flask, Django, etc.):
+The frontend application opens at `http://localhost:3000`.
+
+---
+
+## API Reference
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/health` | `GET` | Health check and service status |
+| `/api/dashboard/stats` | `GET` | Fleet KPIs: vehicle count, active assets, alerts, fuel efficiency |
+| `/api/vehicles` | `GET`, `POST` | List all vehicles or register a new fleet asset |
+| `/api/vehicles/<id>` | `GET`, `PATCH`, `DELETE` | Retrieve, update status/coordinates, or delete a vehicle |
+| `/api/drivers` | `GET`, `POST` | List or register drivers |
+| `/api/drivers/assign` | `POST` | Assign an on-duty driver to a vehicle asset |
+| `/api/tasks` | `GET`, `POST` | Retrieve all dispatch tasks or create a new delivery order |
+| `/api/tasks/<id>` | `PATCH`, `DELETE` | Update task status or delete task |
+| `/api/allocate_task` | `POST` | Execute algorithmic task allocation across fleet vehicles |
+| `/api/optimize_route` | `POST` | Compute shortest route, waypoints, and ETA adjusted for traffic |
+| `/api/maintenance` | `GET`, `POST` | List scheduled maintenance orders or log a new service order |
+| `/api/vehicles/<id>/fuel`| `GET`, `POST` | Retrieve vehicle fuel logs or audit a refueling entry |
+
+---
+
+## Verification & Testing
+
+### Backend Test Suite
+
+Run all automated pytest suites (18 tests verifying algorithms, models, and endpoints):
 
 ```bash
-python app.py
+cd backend
+./venv/bin/pytest -v
 ```
+
+### Frontend Test Suite
+
+```bash
+cd frontend
+npm test -- --watchAll=false
+```
+
+---
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Directory Structure
-
-```
-FleetManagement/
-├── backend/
-│   ├── app.py
-│   ├── database.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── vehicle.py
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── task_allocation.py
-│   │   └── route_optimizer.py
-│   └── requirements.txt
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── App.js
-│   │   └── index.js
-│   ├── package.json
-│   ├── package-lock.json
-│   └── .env
-├── docker-compose.yml
-└── .github/
-    └── workflows/
-        └── deploy.yml
-```
-
-## Technical Components
-
-| Component          | Technology                      |
-|--------------------|---------------------------------|
-| Backend API        | Python (Flask)                  |
-| Frontend           | React.js, HTML, CSS             |
-| Database           | MongoDB                         |
-| Vehicle Tracking   | GPS APIs, Real-time Location    |
-| Fuel Tracking      | custom logic                    |
-| Deployment         | Docker, Github Actions          |
-
----

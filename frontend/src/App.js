@@ -1,111 +1,87 @@
-import React, { useState } from "react";
-import "./styles.css";
+import React, { useState } from 'react';
+import './styles.css';
+import Dashboard from './components/Dashboard';
+import FleetMap from './components/FleetMap';
+import TaskManager from './components/TaskManager';
+import RoutePlanner from './components/RoutePlanner';
+import MaintenanceFuel from './components/MaintenanceFuel';
 
 const App = () => {
-  const [selectedFeature, setSelectedFeature] = useState(null);
-
-  const features = [
-    {
-      title: "Vehicle Tracking",
-      description: "Monitor usage, mileage, and real-time location of your fleet.",
-      details: "Our vehicle tracking system gives you real-time GPS data and a history of vehicle movement, ensuring you can manage your fleet efficiently."
-    },
-    {
-      title: "Maintenance Alerts",
-      description: "Set reminders for scheduled maintenance and track repair history.",
-      details: "We automatically notify you of upcoming maintenance and track service history to ensure your vehicles are always in top condition."
-    },
-    {
-      title: "Fuel Monitoring",
-      description: "Track fuel efficiency and consumption to reduce costs.",
-      details: "Get detailed reports on fuel usage for each vehicle, helping you optimize fuel costs and identify inefficiencies in your fleet."
-    }
-  ];
-
-  const handleFeatureClick = (index) => {
-    setSelectedFeature(features[index]);
-  };
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
-    <div>
-      {/* Navigation Bar */}
+    <div className="app-root">
+      {/* Top Application Header */}
       <header>
-        <nav className="container">
-          <a href="/" className="logo">
-            Fleet Management System
+        <div className="container nav-container">
+          <a href="#home" className="logo" onClick={() => setActiveTab('dashboard')}>
+            🚛 <span>FleetOS MicroSaaS</span>
           </a>
-          <ul className="nav-links">
-            <li><a href="#features">Features</a></li>
-            <li><a href="#dashboard">Dashboard</a></li>
-          </ul>
-        </nav>
+
+          <nav>
+            <ul className="nav-tabs">
+              <li>
+                <button
+                  className={activeTab === 'dashboard' ? 'active' : ''}
+                  onClick={() => setActiveTab('dashboard')}
+                >
+                  📊 Dashboard
+                </button>
+              </li>
+              <li>
+                <button
+                  className={activeTab === 'map' ? 'active' : ''}
+                  onClick={() => setActiveTab('map')}
+                >
+                  🗺️ Fleet Map
+                </button>
+              </li>
+              <li>
+                <button
+                  className={activeTab === 'tasks' ? 'active' : ''}
+                  onClick={() => setActiveTab('tasks')}
+                >
+                  📋 Task Allocation
+                </button>
+              </li>
+              <li>
+                <button
+                  className={activeTab === 'routes' ? 'active' : ''}
+                  onClick={() => setActiveTab('routes')}
+                >
+                  🧭 Route Optimizer
+                </button>
+              </li>
+              <li>
+                <button
+                  className={activeTab === 'maintenance' ? 'active' : ''}
+                  onClick={() => setActiveTab('maintenance')}
+                >
+                  ⚙️ Maintenance & Health
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="hero">
+      {/* Main Dynamic View */}
+      <main>
         <div className="container">
-          <h1>Effortless Fleet Management</h1>
-          <p>
-            Streamline your fleet operations with real-time tracking, fuel
-            monitoring, and maintenance management all in one place.
-          </p>
-          <a href="#features" className="cta-button">Learn More</a>
+          {activeTab === 'dashboard' && <Dashboard />}
+          {activeTab === 'map' && <FleetMap />}
+          {activeTab === 'tasks' && <TaskManager />}
+          {activeTab === 'routes' && <RoutePlanner />}
+          {activeTab === 'maintenance' && <MaintenanceFuel />}
         </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="features">
-        <div className="container">
-          <h2>Key Features</h2>
-          <div className="feature-cards">
-            {features.map((feature, index) => (
-              <div 
-                key={index} 
-                className={`card ${selectedFeature?.title === feature.title ? 'active' : ''}`}
-                onClick={() => handleFeatureClick(index)}
-              >
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
-              </div>
-            ))}
-          </div>
-          {selectedFeature && (
-            <div className="feature-details">
-              <h3>Details for {selectedFeature.title}</h3>
-              <p>{selectedFeature.details}</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Dashboard Section */}
-      <section id="dashboard" className="dashboard">
-        <div className="container">
-          <h2>Fleet Dashboard</h2>
-          <div className="dashboard-container">
-            <div className="dashboard-item">
-              <h3>Total Vehicles</h3>
-              <p>120</p>
-            </div>
-            <div className="dashboard-item">
-              <h3>Vehicles in Use</h3>
-              <p>85</p>
-            </div>
-            <div className="dashboard-item">
-              <h3>Maintenance Due</h3>
-              <p>15</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      </main>
 
       {/* Footer */}
       <footer>
         <div className="container">
-          <p>&copy; {new Date().getFullYear()} Fleet Management System. All rights reserved.</p>
-          <p>
-            <a href="#privacy-policy">Privacy Policy</a> |{" "}
-            <a href="#terms-of-service">Terms of Service</a>
+          <p>© {new Date().getFullYear()} Fleet Management System — Enterprise Logistics & Delivery Automation.</p>
+          <p style={{ marginTop: '4px', fontSize: '0.8rem' }}>
+            Built with React, Flask, PostgreSQL & Docker Containerization.
           </p>
         </div>
       </footer>

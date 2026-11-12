@@ -1,64 +1,50 @@
-import axios from "axios";
+import axios from 'axios';
 
-// Base API configuration
+// Base API client configuration
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const apiClient = axios.create({
-  baseURL: "http://127.0.0.1:5000", // Replace with your backend URL
+  baseURL: API_BASE_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
+  timeout: 10000,
 });
 
-// Error handling
+// Generic error handler
 const handleApiError = (error) => {
-  if (error.response) {
-    console.error(`API Error: ${error.response.data.message}`);
-  } else {
-    console.error(`Network Error: ${error.message}`);
-  }
-  throw error;
+  const message = error.response?.data?.error || error.message || 'Unknown network error';
+  console.error(`[API Error]: ${message}`, error);
+  throw new Error(message);
 };
 
-// Task Management APIs
-export const getTasks = async () => {
+// -------------------------------------------------------------
+// Dashboard & Analytics
+// -------------------------------------------------------------
+export const getDashboardStats = async () => {
   try {
-    const response = await apiClient.get("/tasks");
+    const response = await apiClient.get('/api/dashboard/stats');
     return response.data;
   } catch (error) {
     handleApiError(error);
   }
 };
 
-export const createTask = async (taskData) => {
-  try {
-    const response = await apiClient.post("/tasks", taskData);
-    return response.data;
-  } catch (error) {
-    handleApiError(error);
-  }
-};
-
-export const updateTaskStatus = async (taskId, status) => {
-  try {
-    const response = await apiClient.patch(`/tasks/${taskId}`, { status });
-    return response.data;
-  } catch (error) {
-    handleApiError(error);
-  }
-};
-
-export const deleteTask = async (taskId) => {
-  try {
-    const response = await apiClient.delete(`/tasks/${taskId}`);
-    return response.data;
-  } catch (error) {
-    handleApiError(error);
-  }
-};
-
-// Vehicle Management APIs
+// -------------------------------------------------------------
+// Vehicle Management
+// -------------------------------------------------------------
 export const getVehicles = async () => {
   try {
-    const response = await apiClient.get("/vehicles");
+    const response = await apiClient.get('/api/vehicles');
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const createVehicle = async (vehicleData) => {
+  try {
+    const response = await apiClient.post('/api/vehicles', vehicleData);
     return response.data;
   } catch (error) {
     handleApiError(error);
@@ -67,17 +53,37 @@ export const getVehicles = async () => {
 
 export const updateVehicleStatus = async (vehicleId, status) => {
   try {
-    const response = await apiClient.patch(`/vehicles/${vehicleId}`, { status });
+    const response = await apiClient.patch(`/api/vehicles/${vehicleId}`, { status });
     return response.data;
   } catch (error) {
     handleApiError(error);
   }
 };
 
-// Driver Management APIs
+export const deleteVehicle = async (vehicleId) => {
+  try {
+    const response = await apiClient.delete(`/api/vehicles/${vehicleId}`);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+// -------------------------------------------------------------
+// Driver Management
+// -------------------------------------------------------------
 export const getDrivers = async () => {
   try {
-    const response = await apiClient.get("/drivers");
+    const response = await apiClient.get('/api/drivers');
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const createDriver = async (driverData) => {
+  try {
+    const response = await apiClient.post('/api/drivers', driverData);
     return response.data;
   } catch (error) {
     handleApiError(error);
@@ -86,45 +92,131 @@ export const getDrivers = async () => {
 
 export const assignDriver = async (driverId, vehicleId) => {
   try {
-    const response = await apiClient.post("/drivers/assign", {
-      driverId,
-      vehicleId,
-    });
+    const response = await apiClient.post('/api/drivers/assign', { driverId, vehicleId });
     return response.data;
   } catch (error) {
     handleApiError(error);
   }
 };
 
-// Fuel Monitoring APIs
-export const getFuelConsumption = async (vehicleId) => {
+// -------------------------------------------------------------
+// Task Management & Allocation
+// -------------------------------------------------------------
+export const getTasks = async () => {
   try {
-    const response = await apiClient.get(`/vehicles/${vehicleId}/fuel`);
+    const response = await apiClient.get('/api/tasks');
     return response.data;
   } catch (error) {
     handleApiError(error);
   }
 };
 
-export const updateFuelConsumption = async (vehicleId, fuelData) => {
+export const createTask = async (taskData) => {
   try {
-    const response = await apiClient.patch(`/vehicles/${vehicleId}/fuel`, fuelData);
+    const response = await apiClient.post('/api/tasks', taskData);
     return response.data;
   } catch (error) {
     handleApiError(error);
   }
 };
 
-// Exporting all APIs as a module
-export default {
+export const updateTaskStatus = async (taskId, status) => {
+  try {
+    const response = await apiClient.patch(`/api/tasks/${taskId}`, { status });
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const deleteTask = async (taskId) => {
+  try {
+    const response = await apiClient.delete(`/api/tasks/${taskId}`);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const allocateTasks = async (payload = {}) => {
+  try {
+    const response = await apiClient.post('/api/allocate_task', payload);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+// -------------------------------------------------------------
+// Route Optimization
+// -------------------------------------------------------------
+export const optimizeRoute = async (payload) => {
+  try {
+    const response = await apiClient.post('/api/optimize_route', payload);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+// -------------------------------------------------------------
+// Maintenance & Fuel Monitoring
+// -------------------------------------------------------------
+export const getMaintenanceLogs = async () => {
+  try {
+    const response = await apiClient.get('/api/maintenance');
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const createMaintenanceLog = async (logData) => {
+  try {
+    const response = await apiClient.post('/api/maintenance', logData);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const getFuelLogs = async (vehicleId) => {
+  try {
+    const response = await apiClient.get(`/api/vehicles/${vehicleId}/fuel`);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+export const createFuelLog = async (vehicleId, fuelData) => {
+  try {
+    const response = await apiClient.post(`/api/vehicles/${vehicleId}/fuel`, fuelData);
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
+const api = {
+  getDashboardStats,
+  getVehicles,
+  createVehicle,
+  updateVehicleStatus,
+  deleteVehicle,
+  getDrivers,
+  createDriver,
+  assignDriver,
   getTasks,
   createTask,
   updateTaskStatus,
   deleteTask,
-  getVehicles,
-  updateVehicleStatus,
-  getDrivers,
-  assignDriver,
-  getFuelConsumption,
-  updateFuelConsumption,
+  allocateTasks,
+  optimizeRoute,
+  getMaintenanceLogs,
+  createMaintenanceLog,
+  getFuelLogs,
+  createFuelLog,
 };
+
+export default api;
