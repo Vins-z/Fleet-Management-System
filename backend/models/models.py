@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, Boolean
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -18,10 +18,19 @@ class Vehicle(Base):
     status = Column(String(50), nullable=False, default="Active") # Active, In Use, Maintenance Due, Idle
     assigned_driver_id = Column(Integer, ForeignKey('drivers.id'), nullable=True)
 
+    # Industry Telematics & Health Diagnostics
+    odometer_km = Column(Float, nullable=False, default=35000.0)
+    engine_hours = Column(Float, nullable=False, default=1250.0)
+    tire_pressure_psi = Column(Float, nullable=False, default=32.0)
+    battery_temp_c = Column(Float, nullable=False, default=26.5)
+    co2_emissions_kg = Column(Float, nullable=False, default=245.0)
+    dtc_fault_codes = Column(String(200), nullable=True, default="NONE")
+
     driver = relationship("Driver", back_populates="vehicles")
     tasks = relationship("Task", back_populates="vehicle")
     maintenance_logs = relationship("MaintenanceLog", back_populates="vehicle", cascade="all, delete-orphan")
     fuel_logs = relationship("FuelLog", back_populates="vehicle", cascade="all, delete-orphan")
+    telematics_events = relationship("TelematicsEvent", back_populates="vehicle", cascade="all, delete-orphan")
 
     def to_dict(self):
         return {
@@ -37,6 +46,12 @@ class Vehicle(Base):
             "status": self.status,
             "assigned_driver_id": self.assigned_driver_id,
             "driver_name": self.driver.name if self.driver else None,
+            "odometer_km": self.odometer_km,
+            "engine_hours": self.engine_hours,
+            "tire_pressure_psi": self.tire_pressure_psi,
+            "battery_temp_c": self.battery_temp_c,
+            "co2_emissions_kg": self.co2_emissions_kg,
+            "dtc_fault_codes": self.dtc_fault_codes,
         }
 
     def calculate_distance(self, target_location):
@@ -56,6 +71,12 @@ class Driver(Base):
     phone = Column(String(20), nullable=True)
     status = Column(String(50), nullable=False, default="Available")  # Available, On Duty, Off Duty
 
+    # Telematics Safety & Behavior
+    safety_score = Column(Float, nullable=False, default=94.0)       # 0 - 100 rating
+    hours_driven_today = Column(Float, nullable=False, default=4.5)   # Hours of Service (HOS)
+    harsh_braking_events = Column(Integer, nullable=False, default=1)
+    speeding_events = Column(Integer, nullable=False, default=0)
+
     vehicles = relationship("Vehicle", back_populates="driver")
 
     def to_dict(self):
@@ -65,6 +86,11 @@ class Driver(Base):
             "license_number": self.license_number,
             "phone": self.phone,
             "status": self.status,
+            "safety_score": self.safety_score,
+            "hours_driven_today": self.hours_driven_today,
+            "harsh_braking_events": self.harsh_braking_events,
+            "speeding_events": self.speeding_events,
+            "risk_profile": "Low Risk" if self.safety_score >= 90 else "Moderate Risk" if self.safety_score >= 75 else "High Risk",
             "assigned_vehicles": [v.vehicle_id for v in self.vehicles] if self.vehicles else []
         }
 
@@ -136,10 +162,11 @@ class MaintenanceLog(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     vehicle_id = Column(Integer, ForeignKey('vehicles.id'), nullable=False)
-    service_type = Column(String(100), nullable=False)  # Oil Change, Tire Rotation, Brake Inspection, etc.
-    status = Column(String(50), nullable=False, default="Scheduled")  # Scheduled, Completed, Overdue
+    service_type = Column(String(100), nullable=False)
+    status = Column(String(50), nullable=False, default="Scheduled")  # Scheduled, In Progress, Completed, Overdue
     due_date = Column(String(50), nullable=False)
     notes = Column(Text, nullable=True)
+    cost = Column(Float, nullable=True, default=150.0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     vehicle = relationship("Vehicle", back_populates="maintenance_logs")
@@ -154,6 +181,7 @@ class MaintenanceLog(Base):
             "status": self.status,
             "due_date": self.due_date,
             "notes": self.notes,
+            "cost": self.cost,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
 
@@ -183,3 +211,58 @@ class FuelLog(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
 
+
+class Geofence(Base):
+    __tablename__ = 'geofences'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(100), nullable=False)
+    zone_type = Column(String(50), nullable=False, default="Warehouse")  # Warehouse, Customer Zone, Depot, Restricted
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    radius_km = Column(Float, nullable=False, default=2.5)
+    description = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "zone_type": self.zone_type,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "center": (self.latitude, self.longitude),
+            "radius_km": self.radius_km,
+            "description": self.description,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class TelematicsEvent(Base):
+    __tablename__ = 'telematics_events'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    vehicle_id = Column(Integer, ForeignKey('vehicles.id'), nullable=False)
+    event_type = Column(String(100), nullable=False)  # Harsh Braking, Rapid Acceleration, Speeding, Geofence Entry, Low Battery
+    severity = Column(String(50), nullable=False, default="Medium")  # Low, Medium, High, Critical
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    description = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    vehicle = relationship("Vehicle", back_populates="telematics_events")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "vehicle_id": self.vehicle_id,
+            "vehicle_code": self.vehicle.vehicle_id if self.vehicle else None,
+            "vehicle_name": self.vehicle.name if self.vehicle else None,
+            "event_type": self.event_type,
+            "severity": self.severity,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "location": (self.latitude, self.longitude),
+            "description": self.description,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }

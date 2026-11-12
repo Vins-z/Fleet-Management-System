@@ -5,7 +5,9 @@ from models.models import (
     Task,
     RouteLog,
     MaintenanceLog,
-    FuelLog
+    FuelLog,
+    Geofence,
+    TelematicsEvent
 )
 from models.vehicle import Vehicle
 
@@ -17,6 +19,7 @@ __all__ = [
     "RouteLog",
     "MaintenanceLog",
     "FuelLog",
+    "Geofence",
+    "TelematicsEvent",
     "Vehicle"
 ]
-

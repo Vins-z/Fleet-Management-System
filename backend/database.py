@@ -3,7 +3,7 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from contextlib import contextmanager
-from models.models import Base, Vehicle, Driver, Task, RouteLog, MaintenanceLog, FuelLog
+from models.models import Base, Vehicle, Driver, Task, RouteLog, MaintenanceLog, FuelLog, Geofence, TelematicsEvent
 
 logger = logging.getLogger(__name__)
 
