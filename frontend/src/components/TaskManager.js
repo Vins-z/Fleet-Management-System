@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { getTasks, createTask, updateTaskStatus, deleteTask, allocateTasks } from '../services/api';
 
-const TaskManager = () => {
+const TaskManager = ({ showToast }) => {
   const [tasks, setTasks] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [loading, setLoading] = useState(true);
   const [allocating, setAllocating] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const [newTask, setNewTask] = useState({
     title: '',
@@ -48,20 +49,14 @@ const TaskManager = () => {
 
   const handleAddTask = async (e) => {
     e.preventDefault();
-    if (!newTask.title) {
-      setError('Task title is required.');
-      return;
-    }
+    if (!newTask.title) return;
 
     try {
-      setError('');
-      setMessage('');
       const res = await createTask(newTask);
       if (res && res.task) {
         setTasks((prev) => [...prev, res.task]);
-        setMessage(`Task "${res.task.title}" created successfully!`);
+        if (showToast) showToast(`Task "${res.task.title}" queued for dispatch.`);
       } else {
-        // Local fallback
         const mockTask = {
           id: Date.now(),
           task_code: `T-${tasks.length + 1001}`,
@@ -69,7 +64,7 @@ const TaskManager = () => {
           status: 'Pending',
         };
         setTasks((prev) => [...prev, mockTask]);
-        setMessage('Task created locally.');
+        if (showToast) showToast('Task registered locally.');
       }
       setNewTask({
         title: '',
@@ -80,8 +75,9 @@ const TaskManager = () => {
         assignedTo: '',
         dueDate: '2026-11-20',
       });
+      setShowAddForm(false);
     } catch (err) {
-      setError(err.message);
+      if (showToast) showToast(`Error: ${err.message}`);
     }
   };
 
@@ -92,9 +88,8 @@ const TaskManager = () => {
       setTasks((prev) =>
         prev.map((t) => (t.id === taskId ? { ...t, status: nextStatus } : t))
       );
-      setMessage(`Task status updated to ${nextStatus}.`);
+      if (showToast) showToast(`Task updated to ${nextStatus}.`);
     } catch (err) {
-      // Local fallback update
       setTasks((prev) =>
         prev.map((t) => (t.id === taskId ? { ...t, status: nextStatus } : t))
       );
@@ -105,7 +100,7 @@ const TaskManager = () => {
     try {
       await deleteTask(taskId);
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
-      setMessage('Task deleted.');
+      if (showToast) showToast('Task removed from dispatch queue.');
     } catch (err) {
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
     }
@@ -114,158 +109,225 @@ const TaskManager = () => {
   const handleAutoAllocate = async () => {
     try {
       setAllocating(true);
-      setError('');
-      setMessage('');
       const res = await allocateTasks({});
       if (res && res.allocation) {
-        setMessage(`Auto-allocated ${res.allocation.length} task(s) to optimal fleet vehicles.`);
+        if (showToast) {
+          showToast(`Algorithmically assigned ${res.allocation.length} order(s) to optimal vehicles.`);
+        }
         await loadTasks();
       }
     } catch (err) {
-      setError(`Auto-allocation error: ${err.message}`);
+      if (showToast) showToast(`Allocation Error: ${err.message}`);
     } finally {
       setAllocating(false);
     }
   };
 
+  const filteredTasks = tasks.filter((t) => {
+    const matchesSearch =
+      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.task_code && t.task_code.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (t.assigned_to && t.assigned_to.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesStatus = statusFilter === 'All' || t.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="task-manager-view">
       <div className="view-header">
         <div>
-          <h2>Logistics Task Allocation</h2>
-          <p>Create, track, and automatically allocate dispatch orders based on vehicle battery, proximity, and urgency.</p>
+          <h2>Logistics Task Dispatch</h2>
+          <p>Order manifest, intelligent route pairing, and algorithmic task allocation.</p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-secondary" onClick={loadTasks}>
-            ↻ Refresh Tasks
+          <button
+            className="btn btn-secondary"
+            onClick={() => setShowAddForm(!showAddForm)}
+          >
+            {showAddForm ? '✕ Close Form' : '+ New Task'}
           </button>
           <button
             className="btn btn-accent"
             onClick={handleAutoAllocate}
             disabled={allocating}
           >
-            {allocating ? 'Optimizing Allocation...' : '⚡ Auto-Allocate Tasks'}
+            {allocating ? 'Optimizing Fleet...' : '⚡ Auto-Allocate Tasks'}
           </button>
         </div>
       </div>
 
-      {message && <div className="success-banner">{message}</div>}
-      {error && <div className="error-banner">{error}</div>}
+      {/* Filter and Search Bar */}
+      <div
+        className="apple-card"
+        style={{
+          padding: '16px 20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '14px',
+          marginBottom: '20px',
+        }}
+      >
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {['All', 'Pending', 'In Progress', 'Completed'].map((tab) => (
+            <button
+              key={tab}
+              className={`btn ${statusFilter === tab ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '6px 14px', fontSize: '0.84rem' }}
+              onClick={() => setStatusFilter(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
 
-      {/* Task Creation Form */}
-      <div className="form-card">
-        <h3 style={{ marginBottom: '14px', color: '#0f172a' }}>Create New Dispatch Task</h3>
-        <form onSubmit={handleAddTask}>
-          <div className="form-grid">
-            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label>Task Title *</label>
-              <input
-                type="text"
-                name="title"
-                placeholder="e.g. Express Delivery to South Hub"
-                value={newTask.title}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Priority Level</label>
-              <select
-                name="priority"
-                value={newTask.priority}
-                onChange={handleInputChange}
-              >
-                <option value="1">1 - Low Urgency</option>
-                <option value="2">2 - Standard Logistics</option>
-                <option value="3">3 - Critical Priority</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Due Date</label>
-              <input
-                type="date"
-                name="dueDate"
-                value={newTask.dueDate}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Target Latitude</label>
-              <input
-                type="number"
-                step="0.0001"
-                name="latitude"
-                value={newTask.latitude}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Target Longitude</label>
-              <input
-                type="number"
-                step="0.0001"
-                name="longitude"
-                value={newTask.longitude}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-
-          <div className="form-group" style={{ marginBottom: '16px' }}>
-            <label>Task Description / Cargo Notes</label>
-            <textarea
-              name="description"
-              rows="2"
-              placeholder="Package dimensions, temperature requirements, delivery instructions..."
-              value={newTask.description}
-              onChange={handleInputChange}
-            />
-          </div>
-
-          <button type="submit" className="btn btn-primary">
-            + Add Task to Queue
-          </button>
-        </form>
+        <div style={{ position: 'relative', width: '280px' }}>
+          <input
+            type="text"
+            placeholder="Search orders, code, or driver..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 14px 8px 34px',
+              borderRadius: 'var(--radius-full)',
+              border: '1px solid var(--border-subtle)',
+              background: 'var(--surface-secondary)',
+              fontSize: '0.88rem',
+            }}
+          />
+          <span style={{ position: 'absolute', left: '12px', top: '8px', color: '#86868b' }}>
+            🔍
+          </span>
+        </div>
       </div>
 
-      {/* Task Table */}
+      {/* Slide-down New Task Form */}
+      {showAddForm && (
+        <div className="form-card" style={{ animation: 'dynamicIslandIn 0.3s ease' }}>
+          <h3 style={{ marginBottom: '16px', fontSize: '1.2rem' }}>New Dispatch Order</h3>
+          <form onSubmit={handleAddTask}>
+            <div className="form-grid">
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label>Task Title *</label>
+                <input
+                  type="text"
+                  name="title"
+                  placeholder="e.g. Critical Medical Delivery to Central Hospital"
+                  value={newTask.title}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Priority Tier</label>
+                <select name="priority" value={newTask.priority} onChange={handleInputChange}>
+                  <option value="1">1 - Standard Logistics</option>
+                  <option value="2">2 - High Urgency</option>
+                  <option value="3">3 - Critical Emergency</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Delivery Due Date</label>
+                <input
+                  type="date"
+                  name="dueDate"
+                  value={newTask.dueDate}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Destination Latitude</label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  name="latitude"
+                  value={newTask.latitude}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Destination Longitude</label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  name="longitude"
+                  value={newTask.longitude}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '18px' }}>
+              <label>Cargo Specifications & Instructions</label>
+              <textarea
+                name="description"
+                rows="2"
+                placeholder="Cargo weight, temperature requirements, delivery contact..."
+                value={newTask.description}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="submit" className="btn btn-primary">
+                Confirm & Add to Dispatch Manifest
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowAddForm(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Task Manifest Table */}
       <div className="table-container">
         <table>
           <thead>
             <tr>
-              <th>Task Code</th>
-              <th>Title</th>
+              <th>Order ID</th>
+              <th>Destination & Details</th>
               <th>Priority</th>
-              <th>Assigned Vehicle</th>
-              <th>Assigned Driver / Contact</th>
-              <th>Due Date</th>
+              <th>Assigned Unit</th>
+              <th>Assigned Driver</th>
+              <th>Target Window</th>
               <th>Status</th>
-              <th>Actions</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {loading && tasks.length === 0 ? (
               <tr>
-                <td colSpan="8" className="loading">Loading task manifest...</td>
+                <td colSpan="8" className="loading">Retrieving logistics manifest...</td>
               </tr>
-            ) : tasks.length === 0 ? (
+            ) : filteredTasks.length === 0 ? (
               <tr>
-                <td colSpan="8" style={{ textAlign: 'center', padding: '24px' }}>
-                  No tasks currently queued.
+                <td colSpan="8" style={{ textAlign: 'center', padding: '36px', color: '#86868b' }}>
+                  No orders match current criteria.
                 </td>
               </tr>
             ) : (
-              tasks.map((task) => (
+              filteredTasks.map((task) => (
                 <tr key={task.id}>
-                  <td><strong>{task.task_code || `T-${task.id}`}</strong></td>
                   <td>
-                    <strong>{task.title}</strong>
+                    <span style={{ fontFamily: 'monospace', fontWeight: '600', color: 'var(--apple-blue)' }}>
+                      {task.task_code || `T-${task.id}`}
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{task.title}</div>
                     {task.description && (
-                      <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                      <div style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', marginTop: '2px' }}>
                         {task.description}
                       </div>
                     )}
@@ -273,30 +335,30 @@ const TaskManager = () => {
                   <td>
                     <span
                       style={{
-                        padding: '2px 8px',
-                        borderRadius: '4px',
+                        padding: '3px 9px',
+                        borderRadius: 'var(--radius-full)',
                         fontWeight: '600',
-                        fontSize: '0.8rem',
+                        fontSize: '0.78rem',
                         backgroundColor:
-                          task.priority === 3 ? '#fee2e2' : task.priority === 2 ? '#fef3c7' : '#e0f2fe',
+                          task.priority === 3 ? 'var(--apple-red-light)' : task.priority === 2 ? 'var(--apple-orange-light)' : 'var(--apple-blue-light)',
                         color:
-                          task.priority === 3 ? '#991b1b' : task.priority === 2 ? '#92400e' : '#075985',
+                          task.priority === 3 ? 'var(--apple-red)' : task.priority === 2 ? 'var(--apple-orange)' : 'var(--apple-blue)',
                       }}
                     >
-                      {task.priority === 3 ? 'Critical' : task.priority === 2 ? 'Medium' : 'Standard'}
+                      {task.priority === 3 ? '● Critical' : task.priority === 2 ? '● Medium' : '● Standard'}
                     </span>
                   </td>
                   <td>
                     {task.assigned_vehicle_code ? (
                       <span className="badge badge-in-use">
-                        🚗 {task.assigned_vehicle_code}
+                        🚚 {task.assigned_vehicle_code}
                       </span>
                     ) : (
-                      <span style={{ color: '#94a3b8' }}>Unassigned</span>
+                      <span style={{ color: 'var(--text-tertiary)', fontSize: '0.86rem' }}>Unassigned</span>
                     )}
                   </td>
-                  <td>{task.assigned_to || 'Unassigned'}</td>
-                  <td>{task.due_date || 'N/A'}</td>
+                  <td style={{ fontSize: '0.9rem' }}>{task.assigned_to || 'Unassigned'}</td>
+                  <td style={{ fontSize: '0.86rem', color: 'var(--text-secondary)' }}>{task.due_date || 'N/A'}</td>
                   <td>
                     <span className={`badge badge-${task.status.toLowerCase().replace(/\s+/g, '-')}`}>
                       {task.status}
@@ -307,18 +369,18 @@ const TaskManager = () => {
                       {task.status !== 'Completed' && (
                         <button
                           className="btn btn-secondary"
-                          style={{ padding: '4px 8px', fontSize: '0.8rem' }}
+                          style={{ padding: '4px 10px', fontSize: '0.78rem' }}
                           onClick={() => handleStatusChange(task.id, task.status)}
                         >
-                          {task.status === 'Pending' ? 'Start' : 'Complete'}
+                          {task.status === 'Pending' ? 'Start' : 'Done'}
                         </button>
                       )}
                       <button
-                        className="btn btn-danger"
-                        style={{ padding: '4px 8px', fontSize: '0.8rem' }}
+                        className="btn btn-secondary"
+                        style={{ padding: '4px 8px', fontSize: '0.78rem', color: 'var(--apple-red)' }}
                         onClick={() => handleDeleteTask(task.id)}
                       >
-                        Delete
+                        ✕
                       </button>
                     </div>
                   </td>

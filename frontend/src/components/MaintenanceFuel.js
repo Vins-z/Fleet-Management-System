@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getMaintenanceLogs, createMaintenanceLog, getVehicles } from '../services/api';
 
-const MaintenanceFuel = () => {
+const MaintenanceFuel = ({ showToast }) => {
   const [maintenanceLogs, setMaintenanceLogs] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
 
   const [newLog, setNewLog] = useState({
     vehicle_id: '',
@@ -55,18 +54,13 @@ const MaintenanceFuel = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newLog.vehicle_id) {
-      setError('Please select a vehicle.');
-      return;
-    }
+    if (!newLog.vehicle_id) return;
 
     try {
-      setError('');
-      setMessage('');
       const res = await createMaintenanceLog(newLog);
       if (res && res.maintenance) {
         setMaintenanceLogs((prev) => [...prev, res.maintenance]);
-        setMessage('Service appointment scheduled successfully.');
+        if (showToast) showToast('Preventive maintenance work order logged.');
       } else {
         const mockEntry = {
           id: Date.now(),
@@ -78,10 +72,11 @@ const MaintenanceFuel = () => {
           notes: newLog.notes,
         };
         setMaintenanceLogs((prev) => [...prev, mockEntry]);
-        setMessage('Service appointment recorded locally.');
+        if (showToast) showToast('Work order recorded locally.');
       }
+      setShowScheduleForm(false);
     } catch (err) {
-      setError(err.message);
+      if (showToast) showToast(`Error: ${err.message}`);
     }
   };
 
@@ -89,81 +84,140 @@ const MaintenanceFuel = () => {
     <div className="maintenance-fuel-view">
       <div className="view-header">
         <div>
-          <h2>Preventive Maintenance & Fleet Health</h2>
-          <p>Schedule proactive maintenance tasks, monitor vehicle health alerts, and track operational readiness.</p>
+          <h2>Preventive Maintenance & Diagnostic Health</h2>
+          <p>Fleet reliability auditing, scheduled service intervals, and health alerts.</p>
         </div>
-        <button className="btn btn-secondary" onClick={loadData}>
-          ↻ Refresh Schedules
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={loadData}
+          >
+            ↻ Sync
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowScheduleForm(!showScheduleForm)}
+          >
+            {showScheduleForm ? '✕ Close Form' : '+ Schedule Service'}
+          </button>
+        </div>
       </div>
 
-      {message && <div className="success-banner">{message}</div>}
-      {error && <div className="error-banner">{error}</div>}
+      {/* Apple Health Metric Tiles */}
+      <div className="metric-grid" style={{ marginBottom: '24px' }}>
+        <div className="metric-card">
+          <div className="metric-card-top">
+            <h3>Reliability Score</h3>
+            <div className="metric-icon-bubble" style={{ background: 'var(--apple-green-light)', color: 'var(--apple-green)' }}>
+              🩺
+            </div>
+          </div>
+          <div className="metric-value" style={{ color: 'var(--apple-green)' }}>96.8%</div>
+          <small>Fleet uptime rating</small>
+        </div>
 
-      <div className="form-card">
-        <h3 style={{ marginBottom: '14px', color: '#0f172a' }}>Schedule Vehicle Maintenance</h3>
-        <form onSubmit={handleSubmit}>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Target Vehicle *</label>
-              <select
-                name="vehicle_id"
-                value={newLog.vehicle_id}
-                onChange={handleInputChange}
-                required
-              >
-                {vehicles.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.name} ({v.vehicle_id})
-                  </option>
-                ))}
-              </select>
+        <div className="metric-card">
+          <div className="metric-card-top">
+            <h3>Pending Work Orders</h3>
+            <div className="metric-icon-bubble" style={{ background: 'var(--apple-orange-light)', color: 'var(--apple-orange)' }}>
+              🛠️
+            </div>
+          </div>
+          <div className="metric-value">{maintenanceLogs.length}</div>
+          <small>Active work tickets</small>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-card-top">
+            <h3>Critical / Overdue</h3>
+            <div className="metric-icon-bubble" style={{ background: 'var(--apple-red-light)', color: 'var(--apple-red)' }}>
+              ⚠️
+            </div>
+          </div>
+          <div className="metric-value" style={{ color: 'var(--apple-red)' }}>
+            {maintenanceLogs.filter((m) => m.status === 'Overdue').length}
+          </div>
+          <small>Immediate inspection needed</small>
+        </div>
+      </div>
+
+      {/* Schedule Work Order Form */}
+      {showScheduleForm && (
+        <div className="form-card" style={{ animation: 'dynamicIslandIn 0.3s ease' }}>
+          <h3 style={{ marginBottom: '16px', fontSize: '1.2rem' }}>Schedule Preventive Maintenance</h3>
+          <form onSubmit={handleSubmit}>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Select Fleet Asset *</label>
+                <select
+                  name="vehicle_id"
+                  value={newLog.vehicle_id}
+                  onChange={handleInputChange}
+                  required
+                >
+                  {vehicles.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name} ({v.vehicle_id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Diagnostic Work Order *</label>
+                <select
+                  name="service_type"
+                  value={newLog.service_type}
+                  onChange={handleInputChange}
+                >
+                  <option value="Oil Change & Filter Replacement">Oil Change & Filter Replacement</option>
+                  <option value="Tire Rotation & Wheel Alignment">Tire Rotation & Wheel Alignment</option>
+                  <option value="Brake Pad & Rotor Inspection">Brake Pad & Rotor Inspection</option>
+                  <option value="Battery Health & Electrical Diagnostic">Battery Health & Electrical Diagnostic</option>
+                  <option value="Transmission Fluid Flush">Transmission Fluid Flush</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Target Service Date *</label>
+                <input
+                  type="date"
+                  name="due_date"
+                  value={newLog.due_date}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
             </div>
 
-            <div className="form-group">
-              <label>Service Type *</label>
-              <select
-                name="service_type"
-                value={newLog.service_type}
+            <div className="form-group" style={{ marginBottom: '18px' }}>
+              <label>Service Instructions & Workshop Notes</label>
+              <textarea
+                name="notes"
+                rows="2"
+                value={newLog.notes}
                 onChange={handleInputChange}
-              >
-                <option value="Oil Change & Filter Replacement">Oil Change & Filter Replacement</option>
-                <option value="Tire Rotation & Wheel Alignment">Tire Rotation & Wheel Alignment</option>
-                <option value="Brake System Inspection">Brake System Inspection</option>
-                <option value="Battery Health & Electrical Diagnostic">Battery Health & Electrical Diagnostic</option>
-                <option value="Transmission Fluid Flush">Transmission Fluid Flush</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Target Due Date *</label>
-              <input
-                type="date"
-                name="due_date"
-                value={newLog.due_date}
-                onChange={handleInputChange}
-                required
+                placeholder="Diagnostic codes, technician assignment, priority parts..."
               />
             </div>
-          </div>
 
-          <div className="form-group" style={{ marginBottom: '16px' }}>
-            <label>Service Instructions & Diagnostic Notes</label>
-            <textarea
-              name="notes"
-              rows="2"
-              value={newLog.notes}
-              onChange={handleInputChange}
-              placeholder="Technician details, parts required, symptoms reported..."
-            />
-          </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="submit" className="btn btn-primary">
+                Confirm Service Ticket
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowScheduleForm(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
-          <button type="submit" className="btn btn-primary">
-            + Schedule Maintenance Work Order
-          </button>
-        </form>
-      </div>
-
+      {/* Maintenance Table */}
       <div className="table-container">
         <table>
           <thead>
@@ -178,20 +232,32 @@ const MaintenanceFuel = () => {
           <tbody>
             {loading && maintenanceLogs.length === 0 ? (
               <tr>
-                <td colSpan="5" className="loading">Loading maintenance ledger...</td>
+                <td colSpan="5" className="loading">Retrieving maintenance records...</td>
+              </tr>
+            ) : maintenanceLogs.length === 0 ? (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '36px', color: '#86868b' }}>
+                  All fleet assets are fully certified. No maintenance scheduled.
+                </td>
               </tr>
             ) : (
               maintenanceLogs.map((log) => (
                 <tr key={log.id}>
-                  <td><strong>{log.vehicle_name || log.vehicle_code || `Vehicle #${log.vehicle_id}`}</strong></td>
+                  <td>
+                    <div style={{ fontWeight: '600' }}>
+                      {log.vehicle_name || log.vehicle_code || `Asset #${log.vehicle_id}`}
+                    </div>
+                  </td>
                   <td>{log.service_type}</td>
-                  <td>{log.due_date}</td>
+                  <td style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>{log.due_date}</td>
                   <td>
                     <span className={`badge badge-${log.status.toLowerCase().replace(/\s+/g, '-')}`}>
                       {log.status}
                     </span>
                   </td>
-                  <td style={{ color: '#64748b' }}>{log.notes || 'Routine checkup'}</td>
+                  <td style={{ color: 'var(--text-tertiary)', fontSize: '0.86rem' }}>
+                    {log.notes || 'Standard checkup'}
+                  </td>
                 </tr>
               ))
             )}
@@ -203,4 +269,3 @@ const MaintenanceFuel = () => {
 };
 
 export default MaintenanceFuel;
-
