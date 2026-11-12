@@ -154,3 +154,4 @@ export const IconSatellite = ({ size = 18, color = 'currentColor', className = '
     <path d="M9 21a6 6 0 0 0-6-6" />
   </svg>
 );
+
