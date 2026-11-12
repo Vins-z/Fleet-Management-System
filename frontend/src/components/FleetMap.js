@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { getVehicles } from '../services/api';
+import { IconRefresh, IconNavigation } from './Icons';
+
+// Component to smoothly fly/pan the map to the selected vehicle's position
+function MapCenterController({ selectedVehicle }) {
+  const map = useMap();
+  useEffect(() => {
+    if (selectedVehicle && selectedVehicle.latitude && selectedVehicle.longitude) {
+      map.flyTo([selectedVehicle.latitude, selectedVehicle.longitude], 12, {
+        duration: 0.8,
+        easeLinearity: 0.25,
+      });
+    }
+  }, [selectedVehicle, map]);
+  return null;
+}
 
 // Create Apple Maps style pill marker
 const createApplePin = (v, isSelected) => {
@@ -124,7 +139,7 @@ const FleetMap = ({ liveSimulation, showToast }) => {
         </div>
 
         {/* Apple Filter Pills */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           {['All', 'Active', 'Idle', 'Maintenance Due'].map((category) => (
             <button
               key={category}
@@ -137,19 +152,20 @@ const FleetMap = ({ liveSimulation, showToast }) => {
           ))}
           <button
             className="btn btn-secondary"
-            style={{ padding: '6px 14px', fontSize: '0.84rem' }}
+            style={{ padding: '6px 14px', fontSize: '0.84rem', display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={() => {
               loadVehicles();
               if (showToast) showToast('GPS coordinates updated via satellite.');
             }}
           >
-            ↻ Sync
+            <IconRefresh size={14} />
+            <span>Sync</span>
           </button>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2.5fr 1fr', gap: '20px' }}>
-        {/* Leaflet Map Card */}
+        {/* Leaflet Map Card with 100% Open Source OpenStreetMap Tiles (No API Key Required) */}
         <div className="fleet-map-container" style={{ height: '560px' }}>
           {loading ? (
             <div className="loading" style={{ paddingTop: '200px' }}>
@@ -162,10 +178,14 @@ const FleetMap = ({ liveSimulation, showToast }) => {
               scrollWheelZoom={false}
               style={{ height: '100%', width: '100%' }}
             >
+              {/* Open-Source OpenStreetMap Tile Layer - No API Key Needed */}
               <TileLayer
-                attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                maxZoom={19}
               />
+
+              <MapCenterController selectedVehicle={selectedVehicle} />
 
               {/* Active Route Trails */}
               {deliveryTrails.map((coords, i) => (
@@ -223,7 +243,7 @@ const FleetMap = ({ liveSimulation, showToast }) => {
                   {selectedVehicle.name}
                 </h4>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                  VIN / Code: <strong>{selectedVehicle.vehicle_id}</strong> · {selectedVehicle.model}
+                  VIN: <strong>{selectedVehicle.vehicle_id}</strong> · {selectedVehicle.model}
                 </p>
               </div>
 
@@ -281,15 +301,28 @@ const FleetMap = ({ liveSimulation, showToast }) => {
                 </div>
               </div>
 
-              <button
-                className="btn btn-primary"
-                style={{ width: '100%', marginTop: 'auto' }}
-                onClick={() => {
-                  if (showToast) showToast(`Vehicle ${selectedVehicle.vehicle_id} flagged for prioritized dispatch.`);
-                }}
-              >
-                Assign New Dispatch Order
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto' }}>
+                <button
+                  className="btn btn-secondary"
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  onClick={() => {
+                    setSelectedVehicle({ ...selectedVehicle });
+                    if (showToast) showToast(`Centered map on ${selectedVehicle.name}.`);
+                  }}
+                >
+                  <IconNavigation size={14} />
+                  <span>Center on Asset</span>
+                </button>
+                <button
+                  className="btn btn-primary"
+                  style={{ width: '100%' }}
+                  onClick={() => {
+                    if (showToast) showToast(`Vehicle ${selectedVehicle.vehicle_id} prioritized for dispatch.`);
+                  }}
+                >
+                  Assign New Dispatch Order
+                </button>
+              </div>
             </div>
           ) : (
             <p style={{ color: 'var(--text-secondary)', padding: '40px 0', textAlign: 'center' }}>

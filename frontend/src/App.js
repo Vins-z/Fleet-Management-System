@@ -7,6 +7,7 @@ import RoutePlanner from './components/RoutePlanner';
 import MaintenanceFuel from './components/MaintenanceFuel';
 import DriverSafety from './components/DriverSafety';
 import GeofenceManager from './components/GeofenceManager';
+import { IconTruck } from './components/Icons';
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -34,7 +35,9 @@ const App = () => {
       <header>
         <div className="container nav-container">
           <div className="logo-area" onClick={() => setActiveTab('dashboard')}>
-            <div className="apple-badge-icon">🚛</div>
+            <div className="apple-badge-icon">
+              <IconTruck size={20} color="#ffffff" />
+            </div>
             <div className="logo-text">
               FleetOS <span className="version-tag">Enterprise</span>
             </div>

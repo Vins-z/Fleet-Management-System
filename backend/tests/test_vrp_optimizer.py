@@ -31,3 +31,4 @@ def test_vrp_single_stop():
     result = optimize_vrp_tour(start, stops)
     assert result["total_stops"] == 1
     assert len(result["legs"]) == 1
+

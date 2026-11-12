@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getTasks, createTask, updateTaskStatus, deleteTask, allocateTasks } from '../services/api';
+import { IconPlus, IconClose, IconZap, IconSearch, IconTruck } from './Icons';
 
 const TaskManager = ({ showToast }) => {
   const [tasks, setTasks] = useState([]);
@@ -142,16 +143,20 @@ const TaskManager = ({ showToast }) => {
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
             className="btn btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={() => setShowAddForm(!showAddForm)}
           >
-            {showAddForm ? '✕ Close Form' : '+ New Task'}
+            {showAddForm ? <IconClose size={14} /> : <IconPlus size={14} />}
+            <span>{showAddForm ? 'Close Form' : 'New Task'}</span>
           </button>
           <button
             className="btn btn-accent"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={handleAutoAllocate}
             disabled={allocating}
           >
-            {allocating ? 'Optimizing Fleet...' : '⚡ Auto-Allocate Tasks'}
+            <IconZap size={14} />
+            <span>{allocating ? 'Optimizing Fleet...' : 'Auto-Allocate Tasks'}</span>
           </button>
         </div>
       </div>
@@ -197,8 +202,8 @@ const TaskManager = ({ showToast }) => {
               fontSize: '0.88rem',
             }}
           />
-          <span style={{ position: 'absolute', left: '12px', top: '8px', color: '#86868b' }}>
-            🔍
+          <span style={{ position: 'absolute', left: '10px', top: '9px', color: '#86868b', display: 'flex' }}>
+            <IconSearch size={16} />
           </span>
         </div>
       </div>
@@ -350,8 +355,9 @@ const TaskManager = ({ showToast }) => {
                   </td>
                   <td>
                     {task.assigned_vehicle_code ? (
-                      <span className="badge badge-in-use">
-                        🚚 {task.assigned_vehicle_code}
+                      <span className="badge badge-in-use" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <IconTruck size={13} />
+                        <span>{task.assigned_vehicle_code}</span>
                       </span>
                     ) : (
                       <span style={{ color: 'var(--text-tertiary)', fontSize: '0.86rem' }}>Unassigned</span>
@@ -377,10 +383,11 @@ const TaskManager = ({ showToast }) => {
                       )}
                       <button
                         className="btn btn-secondary"
-                        style={{ padding: '4px 8px', fontSize: '0.78rem', color: 'var(--apple-red)' }}
+                        style={{ padding: '4px 8px', fontSize: '0.78rem', color: 'var(--apple-red)', display: 'flex', alignItems: 'center' }}
                         onClick={() => handleDeleteTask(task.id)}
+                        title="Delete task"
                       >
-                        ✕
+                        <IconClose size={12} />
                       </button>
                     </div>
                   </td>

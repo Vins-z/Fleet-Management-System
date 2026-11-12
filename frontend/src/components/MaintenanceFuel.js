@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getMaintenanceLogs, createMaintenanceLog, getVehicles } from '../services/api';
+import { IconStethoscope, IconWrench, IconAlert, IconPlus, IconClose, IconRefresh } from './Icons';
 
 const MaintenanceFuel = ({ showToast }) => {
   const [maintenanceLogs, setMaintenanceLogs] = useState([]);
@@ -90,15 +91,19 @@ const MaintenanceFuel = ({ showToast }) => {
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             className="btn btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={loadData}
           >
-            ↻ Sync
+            <IconRefresh size={14} />
+            <span>Sync</span>
           </button>
           <button
             className="btn btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={() => setShowScheduleForm(!showScheduleForm)}
           >
-            {showScheduleForm ? '✕ Close Form' : '+ Schedule Service'}
+            {showScheduleForm ? <IconClose size={14} /> : <IconPlus size={14} />}
+            <span>{showScheduleForm ? 'Close Form' : 'Schedule Service'}</span>
           </button>
         </div>
       </div>
@@ -109,7 +114,7 @@ const MaintenanceFuel = ({ showToast }) => {
           <div className="metric-card-top">
             <h3>Reliability Score</h3>
             <div className="metric-icon-bubble" style={{ background: 'var(--apple-green-light)', color: 'var(--apple-green)' }}>
-              🩺
+              <IconStethoscope size={18} />
             </div>
           </div>
           <div className="metric-value" style={{ color: 'var(--apple-green)' }}>96.8%</div>
@@ -120,7 +125,7 @@ const MaintenanceFuel = ({ showToast }) => {
           <div className="metric-card-top">
             <h3>Pending Work Orders</h3>
             <div className="metric-icon-bubble" style={{ background: 'var(--apple-orange-light)', color: 'var(--apple-orange)' }}>
-              🛠️
+              <IconWrench size={18} />
             </div>
           </div>
           <div className="metric-value">{maintenanceLogs.length}</div>
@@ -131,7 +136,7 @@ const MaintenanceFuel = ({ showToast }) => {
           <div className="metric-card-top">
             <h3>Critical / Overdue</h3>
             <div className="metric-icon-bubble" style={{ background: 'var(--apple-red-light)', color: 'var(--apple-red)' }}>
-              ⚠️
+              <IconAlert size={18} />
             </div>
           </div>
           <div className="metric-value" style={{ color: 'var(--apple-red)' }}>

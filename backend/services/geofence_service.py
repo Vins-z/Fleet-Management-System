@@ -45,3 +45,4 @@ def evaluate_vehicle_geofences(vehicle_location, geofences):
         })
 
     return results
+

@@ -22,3 +22,4 @@ def test_geofence_inside_and_outside():
 def test_geofence_empty():
     assert evaluate_vehicle_geofences(None, []) == []
     assert evaluate_vehicle_geofences((28.6, 77.2), []) == []
+

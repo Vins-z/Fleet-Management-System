@@ -121,3 +121,4 @@ def optimize_vrp_tour(start_location, stops):
         "ordered_stops": ordered_stops,
         "legs": legs
     }
+

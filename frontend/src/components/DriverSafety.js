@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getDriverScorecards, getTelematicsEvents } from '../services/api';
+import { IconRefresh, IconShield } from './Icons';
 
 const DriverSafety = ({ showToast }) => {
   const [drivers, setDrivers] = useState([]);
@@ -37,17 +38,22 @@ const DriverSafety = ({ showToast }) => {
     <div className="driver-safety-view">
       <div className="view-header">
         <div>
-          <h2>Driver Telematics & Safety Scorecards</h2>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IconShield size={24} color="var(--apple-blue)" />
+            <span>Driver Telematics & Safety Scorecards</span>
+          </h2>
           <p>Behavioral safety scoring, Hours of Service (HOS) regulatory compliance, and incident telemetry.</p>
         </div>
         <button
           className="btn btn-secondary"
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           onClick={() => {
             loadData();
             if (showToast) showToast('Driver telematics metrics synchronized.');
           }}
         >
-          ↻ Refresh Safety Data
+          <IconRefresh size={14} />
+          <span>Refresh Safety Data</span>
         </button>
       </div>
 
@@ -194,3 +200,4 @@ const DriverSafety = ({ showToast }) => {
 };
 
 export default DriverSafety;
+

@@ -6,6 +6,12 @@ jest.mock('react-leaflet', () => ({
   TileLayer: () => <div data-testid="tile-layer" />,
   Marker: ({ children }) => <div data-testid="marker">{children}</div>,
   Popup: ({ children }) => <div data-testid="popup">{children}</div>,
+  Polyline: () => <div data-testid="polyline" />,
+  useMap: () => ({
+    flyTo: jest.fn(),
+    panTo: jest.fn(),
+    setView: jest.fn(),
+  }),
 }));
 
 // Mock Leaflet L.divIcon

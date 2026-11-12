@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getGeofences, createGeofence, deleteGeofence, evaluateGeofences } from '../services/api';
+import { IconPlus, IconClose, IconRadar } from './Icons';
 
 const GeofenceManager = ({ showToast }) => {
   const [geofences, setGeofences] = useState([]);
@@ -108,16 +109,20 @@ const GeofenceManager = ({ showToast }) => {
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             className="btn btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={() => setShowAddForm(!showAddForm)}
           >
-            {showAddForm ? '✕ Close Form' : '+ New Geofence'}
+            {showAddForm ? <IconClose size={14} /> : <IconPlus size={14} />}
+            <span>{showAddForm ? 'Close Form' : 'New Geofence'}</span>
           </button>
           <button
             className="btn btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={handleEvaluate}
             disabled={evaluating}
           >
-            {evaluating ? 'Auditing Zones...' : '🛰️ Scan Fleet Compliance'}
+            <IconRadar size={15} />
+            <span>{evaluating ? 'Auditing Zones...' : 'Scan Fleet Compliance'}</span>
           </button>
         </div>
       </div>
@@ -244,10 +249,11 @@ const GeofenceManager = ({ showToast }) => {
                 </div>
                 <button
                   className="btn btn-secondary"
-                  style={{ padding: '3px 8px', fontSize: '0.75rem', color: 'var(--apple-red)' }}
+                  style={{ padding: '3px 6px', fontSize: '0.75rem', color: 'var(--apple-red)', display: 'flex', alignItems: 'center' }}
                   onClick={() => handleDelete(gf.id)}
+                  title="Delete geofence"
                 >
-                  ✕
+                  <IconClose size={12} />
                 </button>
               </div>
 

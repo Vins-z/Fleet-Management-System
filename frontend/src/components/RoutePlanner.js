@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { optimizeRoute, optimizeVrpTour } from '../services/api';
+import { IconCompass, IconZap, IconClose, IconPlus } from './Icons';
 
 const RoutePlanner = ({ showToast }) => {
   const [plannerMode, setPlannerMode] = useState('vrp'); // 'vrp' or 'p2p'
@@ -120,8 +121,13 @@ const RoutePlanner = ({ showToast }) => {
           <div className="apple-card" style={{ margin: 0 }}>
             <div className="apple-card-header">
               <h3>Delivery Manifest (Stops)</h3>
-              <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '0.8rem' }} onClick={addStop}>
-                + Add Stop
+              <button
+                className="btn btn-secondary"
+                style={{ padding: '4px 10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '5px' }}
+                onClick={addStop}
+              >
+                <IconPlus size={13} />
+                <span>Add Stop</span>
               </button>
             </div>
 
@@ -158,10 +164,11 @@ const RoutePlanner = ({ showToast }) => {
                   {stops.length > 1 && (
                     <button
                       className="btn btn-secondary"
-                      style={{ padding: '2px 8px', fontSize: '0.75rem', color: 'var(--apple-red)' }}
+                      style={{ padding: '2px 6px', fontSize: '0.75rem', color: 'var(--apple-red)', display: 'flex', alignItems: 'center' }}
                       onClick={() => removeStop(stop.id)}
+                      title="Remove stop"
                     >
-                      ✕
+                      <IconClose size={12} />
                     </button>
                   )}
                 </div>
@@ -170,11 +177,12 @@ const RoutePlanner = ({ showToast }) => {
 
             <button
               className="btn btn-primary"
-              style={{ width: '100%', padding: '12px' }}
+              style={{ width: '100%', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               onClick={handleOptimizeVRP}
               disabled={loading}
             >
-              {loading ? 'Synthesizing VRP Permutation...' : '⚡ Optimize Multi-Stop Tour'}
+              <IconZap size={16} />
+              <span>{loading ? 'Synthesizing VRP Permutation...' : 'Optimize Multi-Stop Tour'}</span>
             </button>
           </div>
 
@@ -309,8 +317,14 @@ const RoutePlanner = ({ showToast }) => {
                 />
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px' }} disabled={loading}>
-                {loading ? 'Synthesizing Path...' : '🚀 Compute Corridor'}
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                disabled={loading}
+              >
+                <IconCompass size={16} />
+                <span>{loading ? 'Synthesizing Path...' : 'Compute Corridor'}</span>
               </button>
             </form>
           </div>

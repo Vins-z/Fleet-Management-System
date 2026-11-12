@@ -190,6 +190,14 @@ header .nav-container {
   border-radius: var(--radius-md);
   list-style: none;
   gap: 2px;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.segmented-control::-webkit-scrollbar {
+  display: none;
 }
 
 .segmented-control button {
@@ -619,6 +627,39 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 .leaflet-container {
   font-family: var(--font-stack) !important;
+}
+
+.leaflet-bar {
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden !important;
+}
+
+.leaflet-bar a {
+  background-color: #ffffff !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: #f5f5f7 !important;
+  color: var(--apple-blue) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: var(--text-primary) !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.94) !important;
 }
 
 .custom-leaflet-pin {

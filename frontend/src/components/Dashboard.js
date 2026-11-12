@@ -1,5 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { getDashboardStats, getExecutiveSummaryReport } from '../services/api';
+import {
+  IconTruck,
+  IconPulse,
+  IconZap,
+  IconAlert,
+  IconFuel,
+  IconLeaf,
+  IconBell,
+  IconDownload,
+  IconRefresh,
+  IconPlus,
+  IconMap,
+  IconShield,
+  IconRadar,
+  IconCompass,
+} from './Icons';
 
 const Dashboard = ({ showToast, setActiveTab }) => {
   const [stats, setStats] = useState(null);
@@ -95,24 +111,30 @@ const Dashboard = ({ showToast, setActiveTab }) => {
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             className="btn btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={exportCSVReport}
           >
-            ⬇️ Export Audit CSV
+            <IconDownload size={14} />
+            <span>Export Audit CSV</span>
           </button>
           <button
             className="btn btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={() => {
               fetchStats();
               if (showToast) showToast('Dashboard metrics refreshed from PostgreSQL database.');
             }}
           >
-            ↻ Refresh
+            <IconRefresh size={14} />
+            <span>Refresh</span>
           </button>
           <button
             className="btn btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={() => setActiveTab && setActiveTab('tasks')}
           >
-            + Dispatch Order
+            <IconPlus size={14} />
+            <span>Dispatch Order</span>
           </button>
         </div>
       </div>
@@ -123,7 +145,7 @@ const Dashboard = ({ showToast, setActiveTab }) => {
           <div className="metric-card-top">
             <h3>Total Fleet</h3>
             <div className="metric-icon-bubble" style={{ background: 'var(--apple-blue-light)', color: 'var(--apple-blue)' }}>
-              🚚
+              <IconTruck size={18} />
             </div>
           </div>
           <div className="metric-value">{stats?.totalVehicles ?? 5}</div>
@@ -134,7 +156,7 @@ const Dashboard = ({ showToast, setActiveTab }) => {
           <div className="metric-card-top">
             <h3>Active En Route</h3>
             <div className="metric-icon-bubble" style={{ background: 'var(--apple-green-light)', color: 'var(--apple-green)' }}>
-              🟢
+              <IconPulse size={18} />
             </div>
           </div>
           <div className="metric-value" style={{ color: 'var(--apple-green)' }}>
@@ -147,7 +169,7 @@ const Dashboard = ({ showToast, setActiveTab }) => {
           <div className="metric-card-top">
             <h3>Available / Idle</h3>
             <div className="metric-icon-bubble" style={{ background: 'var(--apple-orange-light)', color: 'var(--apple-orange)' }}>
-              ⚡
+              <IconZap size={18} />
             </div>
           </div>
           <div className="metric-value" style={{ color: 'var(--apple-orange)' }}>
@@ -160,7 +182,7 @@ const Dashboard = ({ showToast, setActiveTab }) => {
           <div className="metric-card-top">
             <h3>Service Due</h3>
             <div className="metric-icon-bubble" style={{ background: 'var(--apple-red-light)', color: 'var(--apple-red)' }}>
-              ⚠️
+              <IconAlert size={18} />
             </div>
           </div>
           <div className="metric-value" style={{ color: 'var(--apple-red)' }}>
@@ -173,7 +195,7 @@ const Dashboard = ({ showToast, setActiveTab }) => {
           <div className="metric-card-top">
             <h3>Fleet Efficiency</h3>
             <div className="metric-icon-bubble" style={{ background: 'var(--apple-purple-light)', color: 'var(--apple-purple)' }}>
-              ⛽
+              <IconFuel size={18} />
             </div>
           </div>
           <div className="metric-value" style={{ color: 'var(--apple-purple)' }}>
@@ -187,7 +209,10 @@ const Dashboard = ({ showToast, setActiveTab }) => {
       {/* ESG Sustainability & Green Fleet Metrics */}
       <div className="apple-card" style={{ marginBottom: '24px' }}>
         <div className="apple-card-header">
-          <h3>🌱 ESG Sustainability & Carbon Footprint Telematics</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: 'var(--apple-green)', display: 'flex' }}><IconLeaf size={20} /></span>
+            <h3>ESG Sustainability & Carbon Footprint Telematics</h3>
+          </div>
           <span className="badge badge-active">ISO 14064 Compliant</span>
         </div>
 
@@ -299,7 +324,10 @@ const Dashboard = ({ showToast, setActiveTab }) => {
       {/* Operational Alerts & Quick Actions */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '24px' }}>
         <div className="alerts-box" style={{ margin: 0 }}>
-          <h3>🔔 Critical Operational Notifications</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+            <span style={{ color: 'var(--apple-orange)', display: 'flex' }}><IconBell size={18} /></span>
+            <h3 style={{ margin: 0 }}>Critical Operational Notifications</h3>
+          </div>
           <div>
             {stats?.alerts && stats.alerts.length > 0 ? (
               stats.alerts.map((alert, idx) => (
@@ -333,31 +361,35 @@ const Dashboard = ({ showToast, setActiveTab }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <button
               className="btn btn-secondary"
-              style={{ justifyContent: 'flex-start', padding: '12px 16px' }}
+              style={{ justifyContent: 'flex-start', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}
               onClick={() => setActiveTab && setActiveTab('map')}
             >
-              🗺️ Open Live Telemetry Map
+              <IconMap size={16} color="var(--apple-blue)" />
+              <span>Open Live Telemetry Map</span>
             </button>
             <button
               className="btn btn-secondary"
-              style={{ justifyContent: 'flex-start', padding: '12px 16px' }}
+              style={{ justifyContent: 'flex-start', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}
               onClick={() => setActiveTab && setActiveTab('safety')}
             >
-              🛡️ Driver Safety Scorecards
+              <IconShield size={16} color="var(--apple-green)" />
+              <span>Driver Safety Scorecards</span>
             </button>
             <button
               className="btn btn-secondary"
-              style={{ justifyContent: 'flex-start', padding: '12px 16px' }}
+              style={{ justifyContent: 'flex-start', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}
               onClick={() => setActiveTab && setActiveTab('geofences')}
             >
-              🛰️ Manage Geofence Zones
+              <IconRadar size={16} color="var(--apple-purple)" />
+              <span>Manage Geofence Zones</span>
             </button>
             <button
               className="btn btn-secondary"
-              style={{ justifyContent: 'flex-start', padding: '12px 16px' }}
+              style={{ justifyContent: 'flex-start', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}
               onClick={() => setActiveTab && setActiveTab('routes')}
             >
-              🧭 Multi-Stop VRP Tour Optimizer
+              <IconCompass size={16} color="var(--apple-orange)" />
+              <span>Multi-Stop VRP Tour Optimizer</span>
             </button>
           </div>
         </div>
