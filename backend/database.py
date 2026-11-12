@@ -1,6 +1,6 @@
 import os
 import logging
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, scoped_session
 from contextlib import contextmanager
 from models.models import Base, Vehicle, Driver, Task, RouteLog, MaintenanceLog, FuelLog, Geofence, TelematicsEvent
@@ -25,6 +25,16 @@ engine = create_engine(
     pool_pre_ping=True,
     echo=False
 )
+
+# Enable WAL mode and busy timeout for concurrent SQLite reads and writes
+@event.listens_for(engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if DATABASE_URL.startswith("sqlite"):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.execute("PRAGMA busy_timeout=5000")
+        cursor.close()
 
 SessionLocal = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
