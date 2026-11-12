@@ -12,6 +12,9 @@ env/
 .coverage
 htmlcov/
 *.db
+*.db-shm
+*.db-wal
+*.db-journal
 *.sqlite3
 
 # Node / Frontend
